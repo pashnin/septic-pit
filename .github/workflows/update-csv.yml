@@ -1,0 +1,27 @@
+name: Update data.csv
+
+on:
+  schedule:
+    - cron: '03 * * * *'   # каждый час в :03 минут
+  workflow_dispatch:         # + кнопка ручного запуска
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download CSV from Google Sheets
+        run: |
+          curl -L \
+            "https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv" \
+            -o data.csv
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.csv
+          git diff --cached --quiet || git commit -m "chore: update data.csv"
+          git push
