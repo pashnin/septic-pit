@@ -7,7 +7,7 @@
 <title>Сливная яма</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
+:root{
   --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;
   --border:#e2e8f0;--text:#1e293b;--text2:#64748b;
   --accent:#3b82f6;--shadow:0 2px 12px rgba(0,0,0,.08);
@@ -21,7 +21,7 @@ body.dark{
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:background .3s,color .3s;min-height:100vh}
 
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-.h-left{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700}
+.h-left{font-size:17px;font-weight:700}
 .h-right{display:flex;align-items:center;gap:8px}
 #dataAge{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;transition:.3s}
 #dataAge.stale{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
@@ -44,11 +44,10 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
 .val{font-size:30px;font-weight:800;line-height:1}
 .sub{font-size:12px;color:var(--text2);margin-top:5px}
 
-/* Термометр */
 .thermo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px auto 8px}
-.thermo-canvas-col{position:relative}
 .thermo-ticks{display:flex;flex-direction:column;justify-content:space-between;height:160px;padding:6px 0}
 .thermo-ticks span{font-size:10px;color:var(--text2);line-height:1;white-space:nowrap}
+
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;margin:6px 0 4px}
 .sg{background:#dcfce7;color:#15803d} body.dark .sg{background:#14532d;color:#86efac}
 .sy{background:#fef9c3;color:#a16207} body.dark .sy{background:#451a03;color:#fcd34d}
@@ -98,20 +97,17 @@ body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
 
 <main id="app" style="display:none">
 
+  <!-- КАРТОЧКИ -->
   <div class="sec">
     📊 Текущее состояние
     <span class="sec-time" id="secTime">—</span>
   </div>
-
   <div class="g4">
-    <!-- Уровень — термометр -->
     <div class="card" style="text-align:center">
       <div class="lbl">📏 Уровень воды</div>
       <div class="thermo-wrap">
-        <div class="thermo-canvas-col">
-          <canvas id="thermoCanvas" width="36" height="172"></canvas>
-        </div>
-        <div class="thermo-ticks" id="thermoTicks">
+        <canvas id="thermoCanvas" width="36" height="172"></canvas>
+        <div class="thermo-ticks">
           <span>0</span>
           <span>−0.2</span>
           <span>−0.4</span>
@@ -130,7 +126,6 @@ body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
       </div>
     </div>
 
-    <!-- Батарея -->
     <div class="card" style="text-align:center">
       <div class="lbl">🔋 Батарея</div>
       <div class="bat-wrap">
@@ -140,14 +135,12 @@ body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
       <div class="sub" id="batSub">—</div>
     </div>
 
-    <!-- Температура -->
     <div class="card" style="text-align:center">
       <div class="lbl">🌡️ Температура</div>
       <div class="val" id="tempVal" style="margin-top:32px">—</div>
       <div class="sub">°C в яме</div>
     </div>
 
-    <!-- Влажность -->
     <div class="card" style="text-align:center">
       <div class="lbl">💧 Влажность</div>
       <div class="val" id="humVal" style="margin-top:32px">—</div>
@@ -156,50 +149,36 @@ body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
     </div>
   </div>
 
-  <!-- РЯД 2: 7 дней -->
-  <div class="sec">📉 Уровень воды — 7 дней</div>
+  <!-- РЯД 1: 24ч + среднее по часам -->
+  <div class="sec">📉 Уровень воды</div>
   <div class="g2">
     <div class="card chart-card">
-      <div class="chart-title">Среднее за день (7 дней)</div>
-      <span class="gap-badge" id="gap7avg">〰 дублированные данные</span>
-      <div class="chart-wrap"><canvas id="c7avg"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <div class="chart-title">Все точки за 7 дней</div>
-      <span class="gap-badge" id="gap7pts">〰 дублированные данные</span>
-      <div class="chart-wrap"><canvas id="c7pts"></canvas></div>
-    </div>
-  </div>
-
-  <!-- РЯД 2б: 24 часа -->
-  <div class="sec">📉 Уровень воды — 24 часа</div>
-  <div class="g2">
-    <div class="card chart-card">
-      <div class="chart-title">Все точки за 24 часа</div>
+      <div class="chart-title">24 часа</div>
       <span class="gap-badge" id="gap24">〰 дублированные данные</span>
       <div class="chart-wrap"><canvas id="c24"></canvas></div>
     </div>
     <div class="card chart-card">
-      <div class="chart-title">По часам суток — среднее за 7 дней</div>
+      <div class="chart-title">Среднее за час — 7 дней</div>
       <div class="chart-wrap"><canvas id="cByHour"></canvas></div>
     </div>
   </div>
 
-  <!-- РЯД 3 -->
-  <div class="sec">📆 Средние значения уровня</div>
+  <!-- РЯД 2: среднее за день 7д + 30д -->
+  <div class="sec">📆 Средние за день</div>
   <div class="g2">
     <div class="card chart-card">
-      <div class="chart-title">По дням — среднее за 30 дней</div>
-      <div class="chart-wrap"><canvas id="cByDay"></canvas></div>
+      <div class="chart-title">Среднее за день — 7 дней</div>
+      <span class="gap-badge" id="gap7avg">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c7avg"></canvas></div>
     </div>
     <div class="card chart-card">
-      <div class="chart-title">По дням — среднее за 7 дней (линия)</div>
-      <div class="chart-wrap"><canvas id="cByDay7"></canvas></div>
+      <div class="chart-title">Среднее за день — 30 дней</div>
+      <div class="chart-wrap"><canvas id="c30avg"></canvas></div>
     </div>
   </div>
 
-  <!-- РЯД 4 -->
-  <div class="sec">🌡️ Температура и влажность за 24 часа</div>
+  <!-- РЯД 3: температура + влажность -->
+  <div class="sec">🌡️ Температура и влажность — 24 часа</div>
   <div class="g2">
     <div class="card chart-card">
       <div class="chart-title">Температура (°C)</div>
@@ -288,114 +267,70 @@ function gapFill(rows,maxGapHours=48){
   return{rows:out,hadGap};
 }
 
-// ── УРОВЕНЬ ──────────────────────────────────────────────────
+// ── СТАТУС ───────────────────────────────────────────────────
 function levelStatus(d){
   if(d>-0.5) return{color:'#ef4444',cls:'sr',label:'🔴 Высокий'};
   if(d>=-0.65)return{color:'#f59e0b',cls:'sy',label:'🟡 Средний'};
   return           {color:'#22c55e',cls:'sg',label:'🟢 Низкий'};
 }
 function zoneColor(v){
+  if(v===null)return'transparent';
   if(v>-0.5) return'rgba(239,68,68,.75)';
   if(v>=-0.65)return'rgba(245,158,11,.75)';
   return          'rgba(34,197,94,.75)';
 }
 
-// ── ТЕРМОМЕТР (canvas) ────────────────────────────────────────
-// Диапазон: 0 (верх, опасно) .. -0.95 (низ, безопасно)
-// Зоны: 0..-0.50 красная | -0.50..-0.65 жёлтая | -0.65..-0.95 зелёная
+// ── ТЕРМОМЕТР ────────────────────────────────────────────────
 function drawThermo(value){
   const cv=document.getElementById('thermoCanvas');
   const ctx=cv.getContext('2d');
-  const W=cv.width, H=cv.height;
+  const W=cv.width,H=cv.height;
   ctx.clearRect(0,0,W,H);
-
   const dark=document.body.classList.contains('dark');
-  const trackBg = dark?'#334155':'#e2e8f0';
-  const borderC = dark?'#475569':'#cbd5e1';
+  const trackBg=dark?'#334155':'#e2e8f0';
+  const borderC=dark?'#475569':'#cbd5e1';
+  const R=10,tw=22,tx=(W-tw)/2,ty=6,th=H-12;
+  const MIN=-0.95,MAX=0;
 
-  const R=10;           // радиус скруглений трубки
-  const tw=22;          // ширина трубки
-  const tx=(W-tw)/2;    // x трубки
-  const ty=6;           // y верха трубки
-  const th=H-12;        // высота трубки
-  const MIN=-0.95, MAX=0; // диапазон значений
-
-  // Функция: значение → y-координата (0 вверху, -0.95 внизу)
   function valToY(v){
-    const pct=(v-MIN)/(MAX-MIN); // 0=низ, 1=верх
+    const pct=(v-MIN)/(MAX-MIN);
     return ty+th-(pct*th);
   }
+  // Фон
+  ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);
+  ctx.fillStyle=trackBg;ctx.fill();
 
-  // ── 1. Фон трубки ─────────────────────────────────────────
-  ctx.beginPath();
-  ctx.roundRect(tx,ty,tw,th,R);
-  ctx.fillStyle=trackBg;
-  ctx.fill();
-
-  // ── 2. Цветные зоны (снизу вверх: зелёная → жёлтая → красная) ─
-  // Зона зелёная: -0.95 .. -0.65
-  const y_green_top = valToY(-0.65);
-  const y_green_bot = valToY(-0.95);
-  // Зона жёлтая: -0.65 .. -0.50
-  const y_yellow_top = valToY(-0.50);
-  const y_yellow_bot = valToY(-0.65);
-  // Зона красная: -0.50 .. 0
-  const y_red_top = valToY(0);
-  const y_red_bot = valToY(-0.50);
-
+  // Зоны
   function fillZone(yTop,yBot,color){
-    const clipTop=Math.max(yTop,ty);
-    const clipBot=Math.min(yBot,ty+th);
-    if(clipBot<=clipTop)return;
-    ctx.save();
-    ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
-    ctx.fillStyle=color;
-    ctx.fillRect(tx,clipTop,tw,clipBot-clipTop);
+    const cTop=Math.max(yTop,ty),cBot=Math.min(yBot,ty+th);
+    if(cBot<=cTop)return;
+    ctx.save();ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
+    ctx.fillStyle=color;ctx.fillRect(tx,cTop,tw,cBot-cTop);
     ctx.restore();
   }
+  fillZone(valToY(-0.65),valToY(-0.95),'#22c55e');
+  fillZone(valToY(-0.50),valToY(-0.65),'#f59e0b');
+  fillZone(valToY(0),    valToY(-0.50),'#ef4444');
 
-  fillZone(y_green_top, y_green_bot, '#22c55e');
-  fillZone(y_yellow_top,y_yellow_bot,'#f59e0b');
-  fillZone(y_red_top,   y_red_bot,   '#ef4444');
-
-  // ── 3. Маска: закрашиваем всё ЧТО ВЫШЕ текущего значения (пустая часть) ─
+  // Маска пустой части
   if(value!==null&&okDist(value)){
     const yVal=valToY(value);
-    ctx.save();
-    ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
-    ctx.fillStyle=trackBg;
-    ctx.fillRect(tx,ty,tw,yVal-ty); // пустая часть сверху
+    ctx.save();ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
+    ctx.fillStyle=trackBg;ctx.fillRect(tx,ty,tw,yVal-ty);
     ctx.restore();
-
-    // ── 4. Стрелка-указатель ─────────────────────────────────
-    const arrowX=tx+tw+3;
-    const arrowY=yVal;
-    const arrowColor=levelStatus(value).color;
-    ctx.beginPath();
-    ctx.moveTo(arrowX,arrowY);
-    ctx.lineTo(arrowX+7,arrowY-5);
-    ctx.lineTo(arrowX+7,arrowY+5);
-    ctx.closePath();
-    ctx.fillStyle=arrowColor;
-    ctx.fill();
+    // Стрелка
+    const ax=tx+tw+3,ay=yVal,ac=levelStatus(value).color;
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+7,ay-5);ctx.lineTo(ax+7,ay+5);
+    ctx.closePath();ctx.fillStyle=ac;ctx.fill();
   }
-
-  // ── 5. Рамка трубки ──────────────────────────────────────
-  ctx.beginPath();
-  ctx.roundRect(tx,ty,tw,th,R);
-  ctx.strokeStyle=borderC;
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-
-  // ── 6. Разделительные линии зон ──────────────────────────
-  const zoneLines=[-0.50,-0.65];
-  zoneLines.forEach(v=>{
+  // Рамка
+  ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);
+  ctx.strokeStyle=borderC;ctx.lineWidth=1.5;ctx.stroke();
+  // Разделители зон
+  [-0.50,-0.65].forEach(v=>{
     const y=valToY(v);
-    ctx.beginPath();
-    ctx.moveTo(tx,y);ctx.lineTo(tx+tw,y);
-    ctx.strokeStyle='rgba(255,255,255,0.4)';
-    ctx.lineWidth=1;
-    ctx.stroke();
+    ctx.beginPath();ctx.moveTo(tx,y);ctx.lineTo(tx+tw,y);
+    ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1;ctx.stroke();
   });
 }
 
@@ -417,12 +352,10 @@ const CH={};
 function gc(){return document.body.classList.contains('dark')?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';}
 function tc(){return document.body.classList.contains('dark')?'#94a3b8':'#64748b';}
 function xSc(){return{ticks:{color:tc(),maxTicksLimit:8,maxRotation:0},grid:{color:gc()}};}
-
-// Ось Y для уровня: 0 вверху, -0.95 внизу
 function yLvSc(){return{min:-0.95,max:0,ticks:{color:tc(),callback:v=>v.toFixed(2)},grid:{color:gc()}};}
 function yNormSc(){return{ticks:{color:tc()},grid:{color:gc()}};}
 
-// fill:'end' = заливка к нижнему краю (-0.95) — т.е. ПОД линией
+// Линейный с поддержкой synthetic (для 24ч — все точки)
 function mkLine(id,pts,color,fillColor,isLevel){
   if(CH[id])CH[id].destroy();
   CH[id]=new Chart(document.getElementById(id),{
@@ -431,37 +364,31 @@ function mkLine(id,pts,color,fillColor,isLevel){
       labels:pts.map(p=>p.label),
       datasets:[{
         data:pts.map(p=>p.value),
-        borderColor:color,
-        backgroundColor:fillColor,
-        // 'end' = к max значению оси = к -0.95 (низ) = ПОД линией
+        borderColor:color,backgroundColor:fillColor,
         fill:isLevel?'end':true,
         tension:.35,
         pointRadius:pts.length>150?0:pts.length>50?1:3,
         pointHoverRadius:5,
         segment:{
-          borderDash:ctx=>{const i=ctx.p0DataIndex;return(pts[i]&&pts[i].synthetic)?[4,4]:[];},
-          borderColor:ctx=>{const i=ctx.p0DataIndex;return(pts[i]&&pts[i].synthetic)?'rgba(168,85,247,.6)':color;}
+          borderDash:ctx=>{const i=ctx.p0DataIndex;return pts[i]?.synthetic?[4,4]:[];},
+          borderColor:ctx=>{const i=ctx.p0DataIndex;return pts[i]?.synthetic?'rgba(168,85,247,.6)':color;}
         }
       }]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>{
-          const p=pts[ctx.dataIndex];
-          const v=ctx.parsed.y;
-          if(v==null)return'';
-          return` ${v.toFixed(3)}${p&&p.synthetic?' (дубль)':''}`;
-        }}}
-      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        const p=pts[ctx.dataIndex];const v=ctx.parsed.y;
+        if(v==null)return'';
+        return` ${v.toFixed(3)}${p?.synthetic?' (дубль)':''}`;
+      }}}},
       scales:{x:xSc(),y:isLevel?yLvSc():yNormSc()}
     }
   });
 }
 
-// Линейный без synthetic (среднее по дням)
+// Линейный простой (среднее за день — 7д и 30д)
 function mkLineSimple(id,labels,data,color,fillColor,isLevel){
   if(CH[id])CH[id].destroy();
   CH[id]=new Chart(document.getElementById(id),{
@@ -469,9 +396,8 @@ function mkLineSimple(id,labels,data,color,fillColor,isLevel){
     data:{labels,datasets:[{
       data,borderColor:color,backgroundColor:fillColor,
       fill:isLevel?'end':true,
-      tension:.4,
-      pointRadius:5,pointHoverRadius:7,
-      pointBackgroundColor:color,borderWidth:2
+      tension:.4,borderWidth:2,
+      pointRadius:5,pointHoverRadius:7,pointBackgroundColor:color
     }]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -482,11 +408,12 @@ function mkLineSimple(id,labels,data,color,fillColor,isLevel){
   });
 }
 
+// Бар (среднее за час)
 function mkBar(id,labels,data,barColors,isLevel){
   if(CH[id])CH[id].destroy();
   CH[id]=new Chart(document.getElementById(id),{
     type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:barColors,borderRadius:4,barPercentage:.75}]},
+    data:{labels,datasets:[{data,backgroundColor:barColors,borderRadius:4,barPercentage:.8}]},
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
@@ -509,8 +436,7 @@ function buildForecast(rawRows,lv,lvDt){
   function reach(target,goUp){
     let v=lv,dt=new Date(lvDt);
     for(let h=0;h<7*24;h++){
-      v+=avg[dt.getHours()];
-      dt=new Date(dt.getTime()+3600000);
+      v+=avg[dt.getHours()];dt=new Date(dt.getTime()+3600000);
       if(goUp?v>=target:v<=target)
         return dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     }
@@ -545,6 +471,7 @@ async function loadData(){
     const now=new Date();
     const lastReal=rawRows[rawRows.length-1];
 
+    // Шапка
     const ageMs=now-lastReal.dt;
     const ageEl=document.getElementById('dataAge');
     ageEl.textContent=fmtAge(ageMs);
@@ -553,9 +480,11 @@ async function loadData(){
     document.getElementById('secTime').textContent=
       lastReal.dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
+    // Темп / Влажность
     document.getElementById('tempVal').textContent=lastReal.temp.toFixed(1)+' °C';
     document.getElementById('humVal').textContent=lastReal.hum.toFixed(1)+' %';
 
+    // Алерт влажности
     const humAlert=document.getElementById('humAlert');
     const lastN=rawRows.slice(-10);
     const humRising=lastN.length===10&&lastN.every((r,i)=>i===0||r.hum>=lastN[i-1].hum);
@@ -568,20 +497,16 @@ async function loadData(){
     // Уровень
     let lv=null,lvRow=null;
     for(let i=rawRows.length-1;i>=0;i--){if(okDist(rawRows[i].dist)){lv=rawRows[i].dist;lvRow=rawRows[i];break;}}
-
-    drawThermo(lv); // всегда рисуем термометр
-
+    drawThermo(lv);
     if(lv!==null){
       document.getElementById('lvNum').textContent=lv.toFixed(3);
       const st=levelStatus(lv);
       const badge=document.getElementById('lvBadge');
       badge.textContent=st.label;badge.className='badge '+st.cls;
-
       const ago7=new Date(now-7*86400000);
       const same=rawRows.filter(r=>r.dt>ago7&&r.dt.getHours()===now.getHours()&&okDist(r.dist));
       document.getElementById('avgHour').textContent=same.length
         ?(same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м':'нет данных';
-
       const fc=buildForecast(rawRows,lv,lvRow.dt);
       document.getElementById('fc50').textContent=lv>=-0.50?'✅ уже':fc.high;
       document.getElementById('fc65').textContent=lv<=-0.65?'✅ уже':fc.low;
@@ -598,58 +523,68 @@ async function loadData(){
     document.getElementById('batNum').textContent=bat.toFixed(2)+' В';
     document.getElementById('batSub').textContent=Math.round(pctB*100)+'% заряда';
 
-    // Диапазоны
-    const ms24=now-24*3600000,ms7=now-7*86400000,ms30=now-30*86400000;
+    const ms24=now-24*3600000;
+    const ms7 =now-7*86400000;
+    const ms30=now-30*86400000;
 
-    // 7д среднее за день
-    const dayMap7={};
-    rawRows.filter(r=>r.dt>ms7&&okDist(r.dist)).forEach(r=>{
-      const k=fmtDay(r.dt);(dayMap7[k]=dayMap7[k]||[]).push(r.dist);
-    });
-    const d7l=Object.keys(dayMap7);
-    const d7v=d7l.map(k=>+(dayMap7[k].reduce((s,x)=>s+x,0)/dayMap7[k].length).toFixed(4));
-    document.getElementById('gap7avg').classList.toggle('show',hadGap&&d7l.length<7);
-    mkLineSimple('c7avg',d7l,d7v,'#10b981','rgba(16,185,129,.15)',true);
+    // ── РЯД 1 ────────────────────────────────────────────────
 
-    // 7д все точки
-    const r7=rows.filter(r=>r.dt>ms7&&okDist(r.dist));
-    document.getElementById('gap7pts').classList.toggle('show',r7.some(r=>r.synthetic));
-    mkLine('c7pts',r7.map(r=>({label:fmtDay(r.dt)+' '+fmtTime(r.dt),value:r.dist,synthetic:r.synthetic})),
-      '#3b82f6','rgba(59,130,246,.15)',true);
-
-    // 24ч
+    // График 1: 24 часа — все точки (с gap-fill)
     const r24=rows.filter(r=>r.dt>ms24&&okDist(r.dist));
     document.getElementById('gap24').classList.toggle('show',r24.some(r=>r.synthetic));
-    mkLine('c24',r24.map(r=>({label:fmtTime(r.dt),value:r.dist,synthetic:r.synthetic})),
-      '#8b5cf6','rgba(139,92,246,.15)',true);
+    mkLine('c24',
+      r24.map(r=>({label:fmtTime(r.dt),value:r.dist,synthetic:r.synthetic})),
+      '#3b82f6','rgba(59,130,246,.15)',true
+    );
 
-    // Среднее по часам суток (бар)
+    // График 2: среднее за час суток за 7 дней — бар, только реальные
     const hourBuckets=Array.from({length:24},(_,h)=>{
       const pts=rawRows.filter(r=>r.dt>ms7&&r.dt.getHours()===h&&okDist(r.dist));
-      return pts.length?pts.reduce((s,r)=>s+r.dist,0)/pts.length:null;
+      return pts.length?+(pts.reduce((s,r)=>s+r.dist,0)/pts.length).toFixed(4):null;
     });
     mkBar('cByHour',
       Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00'),
-      hourBuckets,hourBuckets.map(v=>v===null?'transparent':zoneColor(v)),true);
+      hourBuckets,
+      hourBuckets.map(v=>zoneColor(v)),
+      true
+    );
 
-    // 30д по дням (бар)
-    const dayMap30={};
-    rawRows.filter(r=>r.dt>ms30&&okDist(r.dist)).forEach(r=>{
-      const k=fmtDay(r.dt);(dayMap30[k]=dayMap30[k]||[]).push(r.dist);
-    });
-    const d30l=Object.keys(dayMap30);
-    const d30v=d30l.map(k=>+(dayMap30[k].reduce((s,x)=>s+x,0)/dayMap30[k].length).toFixed(4));
-    mkBar('cByDay',d30l,d30v,d30v.map(v=>zoneColor(v)),true);
+    // ── РЯД 2 ────────────────────────────────────────────────
 
-    // 7д линейный
-    mkLineSimple('cByDay7',d7l,d7v,'#f59e0b','rgba(245,158,11,.15)',true);
+    // Хелпер: среднее за день из rawRows за период
+    function dayAvg(ms){
+      const map={};
+      rawRows.filter(r=>r.dt>ms&&okDist(r.dist)).forEach(r=>{
+        const k=fmtDay(r.dt);(map[k]=map[k]||[]).push(r.dist);
+      });
+      const labels=Object.keys(map);
+      const vals=labels.map(k=>+(map[k].reduce((s,x)=>s+x,0)/map[k].length).toFixed(4));
+      return{labels,vals};
+    }
 
-    // Температура и влажность — fill:true (обычный, сверху)
+    // График 3: среднее за день — 7 дней
+    const d7=dayAvg(ms7);
+    document.getElementById('gap7avg').classList.toggle('show',hadGap&&d7.labels.length<7);
+    mkLineSimple('c7avg',d7.labels,d7.vals,'#10b981','rgba(16,185,129,.15)',true);
+
+    // График 4: среднее за день — 30 дней
+    const d30=dayAvg(ms30);
+    mkLineSimple('c30avg',d30.labels,d30.vals,'#f59e0b','rgba(245,158,11,.15)',true);
+
+    // ── РЯД 3 ────────────────────────────────────────────────
+
+    // График 5: температура 24ч
     const rTH=rows.filter(r=>r.dt>ms24);
-    mkLine('cTemp',rTH.map(r=>({label:fmtTime(r.dt),value:r.temp,synthetic:r.synthetic})),
-      '#f97316','rgba(249,115,22,.15)',false);
-    mkLine('cHum',rTH.map(r=>({label:fmtTime(r.dt),value:r.hum,synthetic:r.synthetic})),
-      '#06b6d4','rgba(6,182,212,.15)',false);
+    mkLine('cTemp',
+      rTH.map(r=>({label:fmtTime(r.dt),value:r.temp,synthetic:r.synthetic})),
+      '#f97316','rgba(249,115,22,.15)',false
+    );
+
+    // График 6: влажность 24ч
+    mkLine('cHum',
+      rTH.map(r=>({label:fmtTime(r.dt),value:r.hum,synthetic:r.synthetic})),
+      '#06b6d4','rgba(6,182,212,.15)',false
+    );
 
   }catch(e){showError(e.message);console.error(e);}
 }
