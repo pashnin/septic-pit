@@ -28,29 +28,30 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
-.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin:22px 0 10px}
+.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.sec-time{font-size:12px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:2px 10px;border-radius:20px;text-transform:none;letter-spacing:0}
 
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);transition:background .3s}
 .lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.val{font-size:28px;font-weight:800;line-height:1}
+.val{font-size:30px;font-weight:800;line-height:1}
 .sub{font-size:12px;color:var(--text2);margin-top:5px}
 
-/* Карточка уровня */
+/* Уровень */
 .lv-gauge-wrap{position:relative;width:100px;height:100px;margin:8px auto}
 .lv-gauge-wrap canvas{position:absolute;top:0;left:0}
 .lv-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.lv-num{font-size:18px;font-weight:800;line-height:1}
+.lv-num{font-size:19px;font-weight:800;line-height:1}
 .lv-unit{font-size:10px;color:var(--text2);margin-top:2px}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;margin:8px 0 6px}
 .sg{background:#dcfce7;color:#15803d} body.dark .sg{background:#14532d;color:#86efac}
 .sy{background:#fef9c3;color:#a16207} body.dark .sy{background:#451a03;color:#fcd34d}
 .sr{background:#fee2e2;color:#b91c1c} body.dark .sr{background:#450a0a;color:#fca5a5}
-.fc-mini{font-size:11px;color:var(--text2);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+.fc-mini{font-size:11px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border);padding-top:8px;margin-top:6px}
 .fc-mini b{color:var(--text)}
-.avg-mini{font-size:11px;color:var(--text2);margin-top:3px}
+.avg-mini{font-size:11px;color:var(--text2);margin-bottom:4px}
 .avg-mini b{color:var(--text)}
 
 /* Батарея */
@@ -58,7 +59,7 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
 .bat-num{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap}
 
 /* Алерт влажности */
-.hum-alert{display:none;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;margin-top:8px;text-align:center}
+.hum-alert{display:none;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;margin-top:8px;text-align:center;line-height:1.4}
 body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 .hum-alert.show{display:block}
 
@@ -67,23 +68,14 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 .chart-wrap{position:relative;height:200px}
 .chart-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)}
 
-/* Ошибка */
 #errBox{display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:12px;padding:14px 18px;margin:20px 0;font-size:14px;line-height:1.6}
-
-/* Лоадер */
 #loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px}
 .spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 #loader p{color:var(--text2);font-size:14px}
 
-@media(max-width:900px){
-  .g4{grid-template-columns:1fr 1fr}
-}
-@media(max-width:560px){
-  .g4{grid-template-columns:1fr 1fr}
-  .g2{grid-template-columns:1fr}
-  .chart-wrap{height:160px}
-}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.g2{grid-template-columns:1fr}.chart-wrap{height:160px}}
 </style>
 </head>
 <body>
@@ -101,10 +93,12 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 
 <main id="app" style="display:none">
 
-  <!-- РЯД 1: 4 карточки -->
-  <div class="sec">📊 Текущее состояние</div>
-  <div class="g4">
+  <div class="sec">
+    📊 Текущее состояние
+    <span class="sec-time" id="secTime">—</span>
+  </div>
 
+  <div class="g4">
     <!-- Уровень воды -->
     <div class="card" style="text-align:center">
       <div class="lbl">📏 Уровень воды</div>
@@ -116,10 +110,10 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
         </div>
       </div>
       <div class="badge" id="lvBadge">—</div>
-      <div class="avg-mini">Ср. этот час (7д): <b id="avgHour">—</b></div>
+      <div class="avg-mini">Ср. час (7д): <b id="avgHour">—</b></div>
       <div class="fc-mini">
-        → −0.50 м: <b id="fc50">—</b><br>
-        → −0.65 м: <b id="fc65">—</b>
+        ↑ до −0.50 м: <b id="fc50">—</b><br>
+        ↓ до −0.65 м: <b id="fc65">—</b>
       </div>
     </div>
 
@@ -136,21 +130,20 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
     <!-- Температура -->
     <div class="card" style="text-align:center">
       <div class="lbl">🌡️ Температура</div>
-      <div class="val" id="tempVal" style="margin-top:28px">—</div>
+      <div class="val" id="tempVal" style="margin-top:32px">—</div>
       <div class="sub">°C в яме</div>
     </div>
 
     <!-- Влажность -->
     <div class="card" style="text-align:center">
       <div class="lbl">💧 Влажность</div>
-      <div class="val" id="humVal" style="margin-top:28px">—</div>
+      <div class="val" id="humVal" style="margin-top:32px">—</div>
       <div class="sub">% RH</div>
-      <div class="hum-alert" id="humAlert">⚠️ Влажность растёт!</div>
+      <div class="hum-alert" id="humAlert">—</div>
     </div>
-
   </div>
 
-  <!-- РЯД 2: графики уровня -->
+  <!-- РЯД 2 -->
   <div class="sec">📉 Уровень воды</div>
   <div class="g2">
     <div class="card chart-card">
@@ -158,25 +151,25 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
       <div class="chart-wrap"><canvas id="c24"></canvas></div>
     </div>
     <div class="card chart-card">
-      <div class="chart-title">За 7 дней (по точкам)</div>
+      <div class="chart-title">За 7 дней</div>
       <div class="chart-wrap"><canvas id="c7d"></canvas></div>
     </div>
   </div>
 
-  <!-- РЯД 3: средние -->
+  <!-- РЯД 3 -->
   <div class="sec">📆 Средние значения уровня</div>
   <div class="g2">
     <div class="card chart-card">
-      <div class="chart-title">Среднее по часам (последние 7 дней)</div>
+      <div class="chart-title">По часам суток — среднее за 7 дней</div>
       <div class="chart-wrap"><canvas id="cByHour"></canvas></div>
     </div>
     <div class="card chart-card">
-      <div class="chart-title">Среднее по дням (последние 30 дней)</div>
+      <div class="chart-title">По дням — среднее за 30 дней</div>
       <div class="chart-wrap"><canvas id="cByDay"></canvas></div>
     </div>
   </div>
 
-  <!-- РЯД 4: температура и влажность -->
+  <!-- РЯД 4 -->
   <div class="sec">🌡️ Температура и влажность за 24 часа</div>
   <div class="g2">
     <div class="card chart-card">
@@ -192,7 +185,7 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 </main>
 
 <script>
-// ── ТЕМА ────────────────────────────────────────────────────
+// ── ТЕМА ─────────────────────────────────────────────────────
 function toggleTheme() {
   const d = document.body.classList.toggle('dark');
   localStorage.setItem('theme', d ? 'dark' : 'light');
@@ -205,8 +198,7 @@ if (localStorage.getItem('theme') === 'dark') {
 
 // ── CSV ПАРСЕР ───────────────────────────────────────────────
 function parseLine(line) {
-  const fields = [];
-  let cur = '', inQ = false;
+  const fields = []; let cur = '', inQ = false;
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
     if (c === '"') { inQ = !inQ; }
@@ -222,336 +214,331 @@ function toNum(s) {
 }
 
 function parseCSV(text) {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-                    .split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+                    .split('\n').map(l=>l.trim()).filter(Boolean);
   if (lines.length < 2) return [];
-
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     const p = parseLine(lines[i]);
     if (p.length < 6) continue;
-
     const dp = p[0].split('.');
     if (dp.length < 3) continue;
-    const yr = parseInt(dp[2], 10) < 100 ? 2000 + parseInt(dp[2], 10) : parseInt(dp[2], 10);
+    const yr = parseInt(dp[2],10) < 100 ? 2000+parseInt(dp[2],10) : parseInt(dp[2],10);
     const tp = p[1].split(':');
     const dt = new Date(yr, parseInt(dp[1],10)-1, parseInt(dp[0],10),
                         parseInt(tp[0],10), parseInt(tp[1]||'0',10));
     if (isNaN(dt.getTime())) continue;
-
     const dist = toNum(p[2]);
     const temp = toNum(p[3]);
     const hum  = toNum(p[4]);
     const bat  = toNum(p[5]);
     if ([dist,temp,hum,bat].some(isNaN)) continue;
-
     rows.push({ dt, dist, temp, hum, bat });
   }
-  rows.sort((a, b) => a.dt - b.dt);
+  rows.sort((a,b) => a.dt - b.dt);
   return rows;
 }
 
-// ── ЛОГИКА УРОВНЯ ────────────────────────────────────────────
-// dist всегда отрицательное: 0 > -0.5 красная, -0.5 > -0.65 жёлтая, < -0.65 зелёная
-function okDist(d) { return d < -0.1 && d > -2.0; }
-
-function levelStatus(d) {
-  // d — отрицательное число
-  if (d > -0.5)  return { color: '#ef4444', cls: 'sr', label: '🔴 Высокий' };
-  if (d >= -0.65) return { color: '#f59e0b', cls: 'sy', label: '🟡 Средний' };
-  return              { color: '#22c55e', cls: 'sg', label: '🟢 Низкий'  };
+// ── УРОВЕНЬ ──────────────────────────────────────────────────
+// dist отрицательный: -1.000 = артефакт датчика (ровно -1)
+// валидный диапазон: от -0.3 до -0.95 (реальные значения)
+function okDist(d) {
+  return d < -0.2 && d > -0.95 && Math.abs(d - (-1.0)) > 0.01;
 }
 
-// Gauge: чем меньше (отрицательнее) dist — тем лучше.
-// 0 = пустой gauge (плохо), -0.80 = полный (хорошо)
+function levelStatus(d) {
+  if (d > -0.5)   return { color:'#ef4444', cls:'sr', label:'🔴 Высокий' };
+  if (d >= -0.65) return { color:'#f59e0b', cls:'sy', label:'🟡 Средний' };
+  return                 { color:'#22c55e', cls:'sg', label:'🟢 Низкий'  };
+}
+
+// Gauge: ближе к 0 — плохо (мало места), дальше — хорошо
+// Диапазон отображения: 0 .. -0.80
 function lvPct(d) { return Math.max(0, Math.min(1, Math.abs(d) / 0.80)); }
 
-// ── CANVAS GAUGES ────────────────────────────────────────────
-function drawCircle(canvasId, pct, color) {
+// ── CANVAS ───────────────────────────────────────────────────
+function drawCircle(id, pct, color) {
   const dark = document.body.classList.contains('dark');
-  const bg   = dark ? '#334155' : '#e2e8f0';
-  const cv   = document.getElementById(canvasId);
-  const ctx  = cv.getContext('2d');
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  const cx = cv.width/2, cy = cv.height/2, r = Math.min(cx,cy)-8;
-  ctx.lineWidth = 10; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-  ctx.strokeStyle = bg; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
-  ctx.strokeStyle = color; ctx.stroke();
+  const bg = dark ? '#334155' : '#e2e8f0';
+  const cv = document.getElementById(id);
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=cv.width/2, cy=cv.height/2, r=Math.min(cx,cy)-8;
+  ctx.lineWidth=10; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle=bg; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);
+  ctx.strokeStyle=color; ctx.stroke();
 }
 
 function drawBat(pct, color) {
   const dark = document.body.classList.contains('dark');
-  const bg   = dark ? '#334155' : '#e2e8f0';
-  const cv   = document.getElementById('batGauge');
-  const ctx  = cv.getContext('2d');
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  const cx = cv.width/2, cy = cv.height-4, r = cx-6;
-  ctx.lineWidth = 9; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 0);
-  ctx.strokeStyle = bg; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI + pct*Math.PI);
-  ctx.strokeStyle = color; ctx.stroke();
+  const bg = dark ? '#334155' : '#e2e8f0';
+  const cv = document.getElementById('batGauge');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=cv.width/2, cy=cv.height-4, r=cx-6;
+  ctx.lineWidth=9; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,0); ctx.strokeStyle=bg; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,Math.PI+pct*Math.PI);
+  ctx.strokeStyle=color; ctx.stroke();
 }
 
-// ── CHART HELPER ─────────────────────────────────────────────
+// ── ГРАФИКИ ──────────────────────────────────────────────────
 const CH = {};
-function mkChart(id, labels, datasets, opts={}) {
-  const dark = document.body.classList.contains('dark');
-  const gc = dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
-  const tc = dark ? '#94a3b8' : '#64748b';
+
+function gc() { return document.body.classList.contains('dark') ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)'; }
+function tc() { return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
+
+// Инвертированная шкала для уровня воды
+// reverse:true — в Chart.js ставится прямо в объект scale
+function yInv() {
+  return { reverse:true, ticks:{color:tc()}, grid:{color:gc()} };
+}
+function yNorm() {
+  return { ticks:{color:tc()}, grid:{color:gc()} };
+}
+function xScale() {
+  return { ticks:{color:tc(), maxTicksLimit:8, maxRotation:0}, grid:{color:gc()} };
+}
+
+function mkLine(id, labels, data, color, fillColor, invertY) {
   if (CH[id]) CH[id].destroy();
   CH[id] = new Chart(document.getElementById(id), {
-    type: opts.type || 'line',
-    data: { labels, datasets },
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: color,
+        backgroundColor: fillColor,
+        fill: true,
+        tension: .35,
+        pointRadius: data.length > 100 ? 0 : 2,
+        pointHoverRadius: 5
+      }]
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        annotation: opts.annotation || {}
-      },
-      scales: opts.scales || {
-        x: { ticks:{color:tc,maxTicksLimit:8,maxRotation:0}, grid:{color:gc} },
-        y: { ticks:{color:tc}, grid:{color:gc}, ...(opts.yExtra||{}) }
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: { legend:{ display:false } },
+      scales: {
+        x: xScale(),
+        y: invertY ? yInv() : yNorm()
       }
     }
   });
 }
 
-function colors() {
-  const dark = document.body.classList.contains('dark');
-  return {
-    gc: dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)',
-    tc: dark ? '#94a3b8' : '#64748b'
-  };
-}
-
-function fmtTime(dt) {
-  return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
-}
-function fmtDay(dt) {
-  return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');
+function mkBar(id, labels, data, barColors) {
+  if (CH[id]) CH[id].destroy();
+  CH[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: barColors,
+        borderRadius: 4,
+        barPercentage: .75
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: { legend:{ display:false } },
+      scales: {
+        x: xScale(),
+        y: yInv()
+      }
+    }
+  });
 }
 
 // ── ПРОГНОЗ ──────────────────────────────────────────────────
-// dist отрицательное: "достигнет -0.65" значит станет <= -0.65
-// "достигнет -0.50" значит станет >= -0.50 (вырастет)
-function buildForecast(rows, curLevel, curDt) {
-  const valid  = rows.filter(r => okDist(r.dist));
+function buildForecast(rows, lv, lvDt) {
+  const valid = rows.filter(r => okDist(r.dist));
   const deltas = Array.from({length:24}, ()=>[]);
   for (let i = 1; i < valid.length; i++) {
-    const a = valid[i-1], b = valid[i];
+    const a=valid[i-1], b=valid[i];
     const ms = b.dt - a.dt;
     if (ms <= 0 || ms > 2*3600000) continue;
     deltas[b.dt.getHours()].push((b.dist - a.dist) / (ms/3600000));
   }
   const avg = deltas.map(arr => arr.length ? arr.reduce((s,x)=>s+x,0)/arr.length : 0);
 
-  function reach(target, goingUp) {
-    let lv = curLevel, dt = new Date(curDt);
+  function reach(target, goUp) {
+    let v = lv, dt = new Date(lvDt);
     for (let h = 0; h < 7*24; h++) {
-      lv += avg[dt.getHours()];
-      dt  = new Date(dt.getTime() + 3600000);
-      if (goingUp ? lv >= target : lv <= target)
+      v += avg[dt.getHours()];
+      dt = new Date(dt.getTime() + 3600000);
+      if (goUp ? v >= target : v <= target)
         return dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     }
     return 'не ожидается (7д)';
   }
   return {
-    high: reach(-0.50, true),  // уровень вырастет (dist станет менее отрицательным)
-    low:  reach(-0.65, false)  // уровень упадёт (dist станет более отрицательным)
+    high: reach(-0.50, true),
+    low:  reach(-0.65, false)
   };
 }
 
-// ── ВОЗРАСТ ДАННЫХ ───────────────────────────────────────────
+// ── УТИЛИТЫ ──────────────────────────────────────────────────
 function fmtAge(ms) {
   const m = Math.round(ms/60000);
   return m < 60 ? `обновлено ${m} мин назад` : `обновлено ${Math.round(m/60)} ч назад`;
 }
-
+function fmtTime(dt) {
+  return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+}
+function fmtDay(dt) {
+  return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');
+}
+function zoneColor(v) {
+  if (v > -0.5)   return 'rgba(239,68,68,.75)';
+  if (v >= -0.65) return 'rgba(245,158,11,.75)';
+  return                 'rgba(34,197,94,.75)';
+}
 function showError(msg) {
-  document.getElementById('loader').style.display = 'none';
-  const b = document.getElementById('errBox');
-  b.style.display = 'block';
-  b.innerHTML = '⚠️ ' + msg;
+  document.getElementById('loader').style.display='none';
+  const b=document.getElementById('errBox');
+  b.style.display='block';
+  b.innerHTML='⚠️ '+msg;
 }
 
 // ── MAIN ─────────────────────────────────────────────────────
 async function loadData() {
   try {
-    const res = await fetch('./data.csv?t=' + Date.now());
-    if (!res.ok) throw new Error(`Файл data.csv не найден (HTTP ${res.status})`);
+    const res = await fetch('./data.csv?t='+Date.now());
+    if (!res.ok) throw new Error(`data.csv не найден (HTTP ${res.status})`);
     const text = await res.text();
-    if (!text.trim()) throw new Error('Файл data.csv пустой');
+    if (!text.trim()) throw new Error('data.csv пустой');
 
     const rows = parseCSV(text);
     if (!rows.length) throw new Error(
       'Не удалось разобрать data.csv.<br>' +
-      'Пример строки: <code>07.02.26,14:59,"-0,676","0,8",13,"4,1"</code>'
+      'Пример: <code>07.02.26,14:59,"-0,676","0,8",13,"4,1"</code>'
     );
 
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+    document.getElementById('loader').style.display='none';
+    document.getElementById('app').style.display='block';
 
     const now  = new Date();
-    const last = rows[rows.length - 1];
+    const last = rows[rows.length-1];
 
+    // Время последней записи
     document.getElementById('dataAge').textContent = fmtAge(now - last.dt);
-    document.getElementById('tempVal').textContent = last.temp.toFixed(1) + ' °C';
-    document.getElementById('humVal').textContent  = last.hum.toFixed(1)  + ' %';
+    document.getElementById('secTime').textContent =
+      last.dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
-    // ── Алерт влажности ─────────────────────────────────────
+    // Темп / Влажность
+    document.getElementById('tempVal').textContent = last.temp.toFixed(1)+' °C';
+    document.getElementById('humVal').textContent  = last.hum.toFixed(1)+' %';
+
+    // Алерт влажности
     const humAlert = document.getElementById('humAlert');
-    const lastN    = rows.slice(-10);
+    const lastN = rows.slice(-10);
     const humRising = lastN.length === 10 &&
-      lastN.every((r, i) => i === 0 || r.hum >= lastN[i-1].hum);
-    const humHigh   = last.hum >= 40;
+      lastN.every((r,i) => i===0 || r.hum >= lastN[i-1].hum);
+    const humHigh = last.hum >= 40;
     if (humRising || humHigh) {
       humAlert.classList.add('show');
       humAlert.textContent = humHigh
-        ? `⚠️ Влажность ${last.hum.toFixed(1)}% — выше 40%!`
+        ? `⚠️ ${last.hum.toFixed(1)}% — выше 40%!`
         : '⚠️ Влажность растёт 10 измерений подряд!';
     } else {
       humAlert.classList.remove('show');
     }
 
-    // ── Уровень ──────────────────────────────────────────────
-    let lv = null, lvRow = null;
-    for (let i = rows.length-1; i >= 0; i--) {
-      if (okDist(rows[i].dist)) { lv = rows[i].dist; lvRow = rows[i]; break; }
+    // Уровень — последний валидный
+    let lv=null, lvRow=null;
+    for (let i=rows.length-1; i>=0; i--) {
+      if (okDist(rows[i].dist)) { lv=rows[i].dist; lvRow=rows[i]; break; }
     }
 
     if (lv !== null) {
-      // Всегда показываем с минусом — dist уже отрицательный
       document.getElementById('lvNum').textContent = lv.toFixed(3);
-
       const st = levelStatus(lv);
       const badge = document.getElementById('lvBadge');
       badge.textContent = st.label;
-      badge.className   = 'badge ' + st.cls;
-
+      badge.className   = 'badge '+st.cls;
       drawCircle('lvGauge', lvPct(lv), st.color);
 
       // Среднее в этот час за 7д
       const ago7  = new Date(now - 7*86400000);
-      const hrNow = now.getHours();
-      const same  = rows.filter(r => r.dt > ago7 && r.dt.getHours() === hrNow && okDist(r.dist));
+      const same  = rows.filter(r => r.dt>ago7 && r.dt.getHours()===now.getHours() && okDist(r.dist));
       document.getElementById('avgHour').textContent = same.length
-        ? (same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м' : 'нет данных';
+        ? (same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м'
+        : 'нет данных';
 
       // Прогноз
       const fc = buildForecast(rows, lv, lvRow.dt);
       document.getElementById('fc50').textContent = lv >= -0.50 ? '✅ уже' : fc.high;
       document.getElementById('fc65').textContent = lv <= -0.65 ? '✅ уже' : fc.low;
+    } else {
+      document.getElementById('lvNum').textContent = '—';
+      document.getElementById('lvBadge').textContent = '⚠️ нет данных';
     }
 
-    // ── Батарея ──────────────────────────────────────────────
+    // Батарея
     const bat  = last.bat;
     const pctB = Math.max(0, Math.min(1, (bat-3.1)/1.0));
-    const batC = pctB > 0.6 ? '#22c55e' : pctB > 0.3 ? '#f59e0b' : '#ef4444';
+    const batC = pctB>0.6?'#22c55e':pctB>0.3?'#f59e0b':'#ef4444';
     drawBat(pctB, batC);
     document.getElementById('batNum').textContent = bat.toFixed(2)+' В';
     document.getElementById('batSub').textContent = Math.round(pctB*100)+'% заряда';
 
-    // ── ГРАФИКИ ──────────────────────────────────────────────
-    const { gc, tc } = colors();
-
-    // Инвертированная ось Y для уровня: -0.3 вверху, -0.9 внизу
-    const yLvInv = {
-      ticks: { color: tc },
-      grid:  { color: gc },
-      reverse: true   // Chart.js инвертирует ось
-    };
-
-    // РЯД 2: 24ч и 7д уровень
+    // ── РЯД 2: линейные графики уровня ──────────────────────
     const ms24 = now - 24*3600000;
-    const r24  = rows.filter(r => r.dt > ms24 && okDist(r.dist));
-    mkChart('c24', r24.map(r=>fmtTime(r.dt)), [{
-      data: r24.map(r=>r.dist),
-      borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)',
-      fill:true, tension:.3, pointRadius:2, pointHoverRadius:5
-    }], { yExtra: yLvInv });
-
     const ms7  = now - 7*86400000;
-    const r7   = rows.filter(r => r.dt > ms7 && okDist(r.dist));
-    mkChart('c7d', r7.map(r=>fmtTime(r.dt)), [{
-      data: r7.map(r=>r.dist),
-      borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)',
-      fill:true, tension:.3, pointRadius:1, pointHoverRadius:4
-    }], { yExtra: yLvInv });
 
-    // РЯД 3а: среднее по часам за 7д
-    const hourAvg = Array.from({length:24}, (_,h) => {
-      const pts = rows.filter(r => r.dt > new Date(now-7*86400000) && r.dt.getHours()===h && okDist(r.dist));
-      return pts.length ? pts.reduce((s,r)=>s+r.dist,0)/pts.length : null;
-    });
-    mkChart('cByHour',
-      Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00'),
-      [{
-        data: hourAvg,
-        backgroundColor: hourAvg.map(v => v===null ? 'transparent' :
-          v > -0.5 ? 'rgba(239,68,68,.7)' : v >= -0.65 ? 'rgba(245,158,11,.7)' : 'rgba(34,197,94,.7)'),
-        borderColor:'transparent', borderRadius:4, barPercentage:.7
-      }],
-      { type:'bar', yExtra: { ...yLvInv, ticks:{color:tc} } }
+    const r24 = rows.filter(r => r.dt>ms24 && okDist(r.dist));
+    mkLine('c24',
+      r24.map(r=>fmtTime(r.dt)),
+      r24.map(r=>r.dist),
+      '#3b82f6', 'rgba(59,130,246,.1)', true
     );
 
-    // РЯД 3б: среднее по дням за 30д
-    const ms30 = now - 30*86400000;
+    const r7 = rows.filter(r => r.dt>ms7 && okDist(r.dist));
+    mkLine('c7d',
+      r7.map(r => {
+        const d=r.dt;
+        return fmtDay(d)+' '+fmtTime(d);
+      }),
+      r7.map(r=>r.dist),
+      '#10b981', 'rgba(16,185,129,.1)', true
+    );
+
+    // ── РЯД 3а: среднее по часам (7д) ───────────────────────
+    const hourBuckets = Array.from({length:24}, (_,h)=>{
+      const pts = rows.filter(r => r.dt>ms7 && r.dt.getHours()===h && okDist(r.dist));
+      return pts.length ? pts.reduce((s,r)=>s+r.dist,0)/pts.length : null;
+    });
+    const hourLabels = Array.from({length:24}, (_,h)=>String(h).padStart(2,'0')+':00');
+    const hourColors = hourBuckets.map(v => v===null ? 'transparent' : zoneColor(v));
+    mkBar('cByHour', hourLabels, hourBuckets, hourColors);
+
+    // ── РЯД 3б: среднее по дням (30д) ───────────────────────
+    const ms30  = now - 30*86400000;
     const dayMap = {};
-    rows.filter(r => r.dt > ms30 && okDist(r.dist)).forEach(r => {
+    rows.filter(r => r.dt>ms30 && okDist(r.dist)).forEach(r=>{
       const k = fmtDay(r.dt);
       (dayMap[k] = dayMap[k]||[]).push(r.dist);
     });
     const dayLabels = Object.keys(dayMap);
-    const dayVals   = dayLabels.map(k => +(dayMap[k].reduce((s,x)=>s+x,0)/dayMap[k].length).toFixed(4));
-    mkChart('cByDay', dayLabels,
-      [{
-        data: dayVals,
-        backgroundColor: dayVals.map(v =>
-          v > -0.5 ? 'rgba(239,68,68,.7)' : v >= -0.65 ? 'rgba(245,158,11,.7)' : 'rgba(34,197,94,.7)'),
-        borderColor:'transparent', borderRadius:4, barPercentage:.7
-      }],
-      { type:'bar', yExtra: { ...yLvInv, ticks:{color:tc} } }
+    const dayVals   = dayLabels.map(k =>
+      +(dayMap[k].reduce((s,x)=>s+x,0)/dayMap[k].length).toFixed(4)
     );
+    const dayColors = dayVals.map(v => zoneColor(v));
+    mkBar('cByDay', dayLabels, dayVals, dayColors);
 
-    // РЯД 4: температура и влажность 24ч
-    const rTH = rows.filter(r => r.dt > ms24);
+    // ── РЯД 4: температура и влажность ──────────────────────
+    const rTH = rows.filter(r => r.dt>ms24);
     const lTH = rTH.map(r=>fmtTime(r.dt));
 
-    mkChart('cTemp', lTH, [{
-      data: rTH.map(r=>r.temp),
-      borderColor:'#f97316', backgroundColor:'rgba(249,115,22,.1)',
-      fill:true, tension:.3, pointRadius:2
-    }], { yExtra:{ticks:{color:tc},grid:{color:gc}} });
-
-    // Влажность — с линией порога 40%
-    mkChart('cHum', lTH, [
-      {
-        data: rTH.map(r=>r.hum),
-        borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,.1)',
-        fill:true, tension:.3, pointRadius:2
-      },
-      {
-        // Линия порога 40%
-        data: rTH.map(()=>40),
-        borderColor:'rgba(239,68,68,.6)',
-        borderDash:[6,3], borderWidth:1.5,
-        pointRadius:0, fill:false, tension:0,
-        label:'Порог 40%'
-      }
-    ], {
-      scales:{
-        x:{ticks:{color:tc,maxTicksLimit:8,maxRotation:0},grid:{color:gc}},
-        y:{ticks:{color:tc},grid:{color:gc}}
-      }
-    });
-    // Показываем легенду только для графика влажности
-    CH['cHum'].options.plugins.legend.display = true;
-    CH['cHum'].options.plugins.legend.labels  = {color:tc,font:{size:11},boxWidth:10};
-    CH['cHum'].update();
+    mkLine('cTemp', lTH, rTH.map(r=>r.temp), '#f97316', 'rgba(249,115,22,.1)', false);
+    mkLine('cHum',  lTH, rTH.map(r=>r.hum),  '#06b6d4', 'rgba(6,182,212,.1)',  false);
 
   } catch(e) {
     showError(e.message);
