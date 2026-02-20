@@ -2,156 +2,264 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Сливная яма — мониторинг</title>
+<title>Septic Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body { font-family: Arial; background:#111; color:white; padding:20px }
-.card { background:#1e1e1e; padding:15px; margin:10px 0; border-radius:10px }
-.big { font-size:32px; font-weight:bold }
-canvas { background:#1e1e1e; border-radius:10px; padding:10px }
+
+:root {
+--bg:#f1f5f9;
+--card:#ffffff;
+--text:#0f172a;
+}
+
+body.dark {
+--bg:#0f172a;
+--card:#1e293b;
+--text:#e2e8f0;
+}
+
+body {
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:system-ui;
+transition:0.3s;
+}
+
+.header {
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+font-size:20px;
+font-weight:600;
+}
+
+button {
+padding:6px 12px;
+border-radius:8px;
+border:none;
+cursor:pointer;
+}
+
+.grid {
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:15px;
+padding:20px;
+}
+
+.card {
+background:var(--card);
+border-radius:16px;
+padding:16px;
+box-shadow:0 4px 20px rgba(0,0,0,0.15);
+text-align:center;
+}
+
+.value {
+font-size:26px;
+font-weight:600;
+}
+
+.small {
+font-size:12px;
+opacity:0.6;
+margin-top:6px;
+}
+
+.section {
+padding:10px 20px 20px 20px;
+}
+
+canvas {
+background:var(--card);
+border-radius:16px;
+padding:10px;
+}
+
+@media(max-width:600px){
+.header { font-size:16px; }
+.value { font-size:22px; }
+}
+
 </style>
 </head>
 <body>
 
-<h2>Текущие значения</h2>
-<div class="card big" id="levelNow"></div>
-<div class="card" id="avgSameHour"></div>
-<div class="card" id="tempNow"></div>
-<div class="card" id="humNow"></div>
-<div class="card" id="batteryNow"></div>
+<div class="header">
+<div>Сливная яма</div>
+<button onclick="toggleTheme()">Тема</button>
+</div>
 
-<h2>Уровень воды — 24 часа</h2>
+<div class="grid">
+<div class="card">
+<div>Уровень</div>
+<div class="value" id="levelNow"></div>
+<div class="small" id="dataAge"></div>
+</div>
+
+<div class="card">
+<div>Среднее (этот час 7д)</div>
+<div class="value" id="avgSameHour"></div>
+</div>
+
+<div class="card">
+<div>Температура</div>
+<div class="value" id="tempNow"></div>
+</div>
+
+<div class="card">
+<div>Влажность</div>
+<div class="value" id="humNow"></div>
+</div>
+
+<div class="card">
+<div>Батарея</div>
+<canvas id="batGauge" height="140"></canvas>
+</div>
+
+<div class="card">
+<div>Прогноз 0.65</div>
+<div class="value" id="forecastHigh"></div>
+</div>
+
+<div class="card">
+<div>Прогноз 0.5</div>
+<div class="value" id="forecastLow"></div>
+</div>
+
+</div>
+
+<div class="section">
+<h3>Уровень 24ч</h3>
 <canvas id="level24"></canvas>
-
-<h2>Уровень воды — 7 дней (среднее за сутки)</h2>
-<canvas id="level7"></canvas>
-
-<h2>Температура и влажность — 24 часа</h2>
-<canvas id="climate24"></canvas>
+</div>
 
 <script>
 
-const url = "https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
+const url="https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
 
-fetch(url)
-.then(res => res.text())
-.then(data => {
+function parseDate(d,t){
+const [day,month,year]=d.split(".");
+return new Date(`20${year}-${month}-${day}T${t}`);
+}
 
-const rows = data.split("\n").slice(1).map(r => r.split(","));
-const now = new Date();
-const last24 = now - 24*60*60*1000;
-const last7 = now - 7*24*60*60*1000;
+function toNum(x){ return parseFloat(x.replace(",", ".")); }
 
-let timestamps = [];
-let level = [];
-let temp = [];
-let hum = [];
-let battery = [];
+function toggleTheme(){
+document.body.classList.toggle("dark");
+}
 
-rows.forEach(r => {
-    const t = new Date(r[0]);
-    if (!isNaN(t)) {
-        timestamps.push(t);
-        level.push(Number(r[1]));
-        temp.push(Number(r[2]));
-        hum.push(Number(r[3]));
-        battery.push(Number(r[4]));
-    }
+fetch(url).then(r=>r.text()).then(data=>{
+
+const rows=data.split("\n").slice(1).map(r=>r.split(","));
+
+let ts=[],level=[],temp=[],hum=[],bat=[];
+
+rows.forEach(r=>{
+if(r.length>=6){
+ts.push(parseDate(r[0],r[1]));
+level.push(toNum(r[2]));
+temp.push(toNum(r[3]));
+hum.push(toNum(r[4]));
+bat.push(toNum(r[5]));
+}
 });
 
-const latestIndex = timestamps.length - 1;
+const last=ts.length-1;
+const now=new Date();
 
-document.getElementById("levelNow").innerHTML =
-"Уровень воды: " + level[latestIndex];
+document.getElementById("levelNow").innerHTML=level[last].toFixed(3)+" м";
+document.getElementById("tempNow").innerHTML=temp[last].toFixed(1)+" °C";
+document.getElementById("humNow").innerHTML=hum[last].toFixed(1)+" %";
 
-document.getElementById("tempNow").innerHTML =
-"Температура: " + temp[latestIndex];
+const diffMin=Math.round((now-ts[last])/60000);
+document.getElementById("dataAge").innerHTML="обновлено "+diffMin+" мин назад";
 
-document.getElementById("humNow").innerHTML =
-"Влажность: " + hum[latestIndex];
+// цвет уровня
+const lvlCard=document.getElementById("levelNow");
+if(level[last]>0.65) lvlCard.style.color="green";
+else if(level[last]>0.5) lvlCard.style.color="orange";
+else lvlCard.style.color="red";
 
-document.getElementById("batteryNow").innerHTML =
-"Батарея: " + battery[latestIndex];
+// среднее 7 дней
+const last7=now-7*24*3600000;
+let sameHour=[],hourNow=now.getHours();
 
+ts.forEach((t,i)=>{
+if(t>last7 && t.getHours()===hourNow)
+sameHour.push(level[i]);
+});
+const avg=sameHour.reduce((a,b)=>a+b,0)/sameHour.length;
+document.getElementById("avgSameHour").innerHTML=avg.toFixed(3)+" м";
 
-// === Среднее в тот же час за 7 дней ===
-
-const currentHour = now.getHours();
-let sameHourValues = [];
-
-timestamps.forEach((t,i)=>{
-    if (t > last7 && t.getHours() === currentHour) {
-        sameHourValues.push(level[i]);
-    }
+// gauge батареи
+new Chart(document.getElementById("batGauge"),{
+type:"doughnut",
+data:{
+datasets:[{
+data:[bat[last]-3.1,4.1-bat[last]],
+backgroundColor:["#22c55e","#e5e7eb"]
+}]
+},
+options:{
+rotation:-90,
+circumference:180,
+plugins:{legend:{display:false}},
+cutout:"70%"
+}
 });
 
-const avgSameHour =
-sameHourValues.reduce((a,b)=>a+b,0) / sameHourValues.length;
+// 24ч график
+let labels=[],data24=[];
+const last24=now-24*3600000;
 
-document.getElementById("avgSameHour").innerHTML =
-"Средний уровень в это время за 7 дней: " + avgSameHour.toFixed(1);
-
-
-// === 24 часа ===
-
-let labels24 = [];
-let level24 = [];
-let temp24 = [];
-let hum24 = [];
-
-timestamps.forEach((t,i)=>{
-    if (t > last24) {
-        labels24.push(t.getHours()+":00");
-        level24.push(level[i]);
-        temp24.push(temp[i]);
-        hum24.push(hum[i]);
-    }
+ts.forEach((t,i)=>{
+if(t>last24){
+labels.push(t.getHours()+":00");
+data24.push(level[i]);
+}
 });
 
-new Chart(document.getElementById("level24"), {
+new Chart(document.getElementById("level24"),{
 type:"line",
-data:{ labels:labels24,
-datasets:[{ label:"Уровень", data:level24 }]
+data:{labels:labels,datasets:[{
+data:data24,
+borderColor:"#3b82f6",
+tension:0.3
+}]}
+});
+
+// ===== прогноз =====
+let X=[],Y=[];
+ts.forEach((t,i)=>{
+if(t>last7){
+X.push(t.getTime());
+Y.push(level[i]);
 }
 });
 
-new Chart(document.getElementById("climate24"), {
-type:"line",
-data:{ labels:labels24,
-datasets:[
-{ label:"Температура", data:temp24 },
-{ label:"Влажность", data:hum24 }
-]
-}
-});
-
-
-// === 7 дней среднее за сутки ===
-
-let daily = {};
-
-timestamps.forEach((t,i)=>{
-    if (t > last7) {
-        const d = t.toISOString().split("T")[0];
-        if (!daily[d]) daily[d] = [];
-        daily[d].push(level[i]);
-    }
-});
-
-let labels7 = [];
-let avg7 = [];
-
-for (let d in daily) {
-    labels7.push(d);
-    avg7.push(daily[d].reduce((a,b)=>a+b,0)/daily[d].length);
+const n=X.length;
+let sumX=0,sumY=0,sumXY=0,sumXX=0;
+for(let i=0;i<n;i++){
+sumX+=X[i];
+sumY+=Y[i];
+sumXY+=X[i]*Y[i];
+sumXX+=X[i]*X[i];
 }
 
-new Chart(document.getElementById("level7"), {
-type:"line",
-data:{ labels:labels7,
-datasets:[{ label:"Средний уровень", data:avg7 }]
+const a=(n*sumXY-sumX*sumY)/(n*sumXX-sumX*sumX);
+const b=(sumY-a*sumX)/n;
+
+function predict(target){
+if(a<=0) return "нет роста";
+const time=(target-b)/a;
+return new Date(time).toLocaleString();
 }
-});
+
+document.getElementById("forecastHigh").innerHTML=predict(0.65);
+document.getElementById("forecastLow").innerHTML=predict(0.5);
 
 });
 
