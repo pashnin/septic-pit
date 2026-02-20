@@ -38,7 +38,6 @@ main{max-width:920px;margin:0 auto;padding:18px 14px 40px}
 .val{font-size:26px;font-weight:800;line-height:1}
 .sub{font-size:12px;color:var(--text2);margin-top:5px}
 
-/* Уровень */
 .level-card{grid-column:span 2;display:flex;align-items:center;gap:20px;padding:20px 22px}
 .lv-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
 .lv-wrap canvas{position:absolute;top:0;left:0}
@@ -48,31 +47,28 @@ main{max-width:920px;margin:0 auto;padding:18px 14px 40px}
 .lv-info{flex:1}
 .lv-info h2{font-size:15px;font-weight:700;margin-bottom:7px}
 .badge{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:9px}
-.sg{background:#dcfce7;color:#15803d} body.dark .sg{background:#14532d;color:#86efac}
-.sy{background:#fef9c3;color:#a16207} body.dark .sy{background:#451a03;color:#fcd34d}
-.sr{background:#fee2e2;color:#b91c1c} body.dark .sr{background:#450a0a;color:#fca5a5}
+.sg{background:#dcfce7;color:#15803d}
+.sy{background:#fef9c3;color:#a16207}
+.sr{background:#fee2e2;color:#b91c1c}
+body.dark .sg{background:#14532d;color:#86efac}
+body.dark .sy{background:#451a03;color:#fcd34d}
+body.dark .sr{background:#450a0a;color:#fca5a5}
 .avg-row{font-size:12px;color:var(--text2)}
 .avg-row b{color:var(--text)}
 
-/* Батарея */
 .bat-card{text-align:center}
 .bat-wrap{position:relative;width:92px;height:56px;margin:6px auto 2px}
 .bat-num{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap}
 
-/* Прогноз */
 .fc-card{border-left:3px solid var(--accent)}
 .fc-to{font-size:10px;color:var(--text2);margin-bottom:3px}
 .fc-val{font-size:13px;font-weight:700;line-height:1.4}
 .fc-note{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-top:11px;line-height:1.6}
 
-/* Графики */
 .chart-card{padding:18px}
 .chart-wrap{position:relative;height:195px}
 
-/* Ошибка */
-#errBox{display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:12px;padding:14px 18px;margin:20px 14px;font-size:14px;line-height:1.5}
-
-/* Лоадер */
+#errBox{display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:12px;padding:14px 18px;margin:20px 14px;font-size:14px;line-height:1.6}
 #loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px}
 .spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -102,7 +98,6 @@ main{max-width:920px;margin:0 auto;padding:18px 14px 40px}
 </header>
 
 <main id="app" style="display:none">
-
   <div class="sec">📊 Текущее состояние</div>
   <div class="g2">
     <div class="card level-card">
@@ -119,7 +114,6 @@ main{max-width:920px;margin:0 auto;padding:18px 14px 40px}
         <div class="avg-row">Среднее в этот час (7д): <b id="avgHour">—</b></div>
       </div>
     </div>
-
     <div class="card bat-card">
       <div class="lbl">🔋 Батарея</div>
       <div class="bat-wrap">
@@ -166,11 +160,10 @@ main{max-width:920px;margin:0 auto;padding:18px 14px 40px}
 
   <div class="sec">🌡️ Температура и влажность — 24 часа</div>
   <div class="card chart-card"><div class="chart-wrap"><canvas id="cTH"></canvas></div></div>
-
 </main>
 
 <script>
-// ── ТЕМА ────────────────────────────────────────────────
+// ── ТЕМА ────────────────────────────────────────────────────
 function toggleTheme() {
   const d = document.body.classList.toggle('dark');
   localStorage.setItem('theme', d ? 'dark' : 'light');
@@ -181,39 +174,52 @@ if (localStorage.getItem('theme') === 'dark') {
   document.querySelector('.btn').textContent = '☀️ Тема';
 }
 
-// ── ПАРСИНГ ─────────────────────────────────────────────
-// Формат строки: "DD.MM.YY H:MM 0,676 0,8 13 4,1"
-// Разделитель — один или несколько пробелов/табов
-function n(s) { return parseFloat((s || '').trim().replace(',', '.')); }
+// ── ПАРСИНГ CSV ─────────────────────────────────────────────
+// Формат: date,time,dist,temp,hum,bat
+// Числа с дробной запятой обёрнуты в кавычки: "0,676"
+// Стандартный RFC-4180 CSV — разбираем честно
 
-function parseCSV(text) {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-
-  // Найдём строку-заголовок (содержит слова date и dist)
-  let hi = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (/date/i.test(lines[i]) && /dist/i.test(lines[i])) { hi = i; break; }
-  }
-  // Если заголовок не найден — начинаем с первой непустой строки (пропускаем её как заголовок)
-  if (hi === -1) {
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].trim()) { hi = i; break; }
+function parseCSVLine(line) {
+  // Простой парсер: учитывает поля в кавычках
+  const fields = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      fields.push(cur.trim());
+      cur = '';
+    } else {
+      cur += c;
     }
   }
+  fields.push(cur.trim());
+  return fields;
+}
 
+function toNum(s) {
+  // Убираем кавычки, заменяем дробную запятую на точку
+  return parseFloat(s.replace(/"/g, '').replace(',', '.'));
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+                    .split('\n')
+                    .map(l => l.trim())
+                    .filter(Boolean);
+
+  if (lines.length < 2) return [];
+
+  // Первая строка — заголовок, пропускаем
   const rows = [];
-  for (let i = hi + 1; i < lines.length; i++) {
-    const raw = lines[i].trim();
-    if (!raw) continue;
-
-    // Разбиваем по пробелам/табам
-    const p = raw.split(/\s+/);
+  for (let i = 1; i < lines.length; i++) {
+    const p = parseCSVLine(lines[i]);
     if (p.length < 6) continue;
 
-    // p[0] = DD.MM.YY  p[1] = H:MM  p[2]=dist  p[3]=temp  p[4]=hum  p[5]=bat
+    // p[0]=date DD.MM.YY  p[1]=time H:MM  p[2]=dist  p[3]=temp  p[4]=hum  p[5]=bat
     const dp = p[0].split('.');
     if (dp.length < 3) continue;
-
     const dd = parseInt(dp[0], 10);
     const mm = parseInt(dp[1], 10) - 1;
     const yy = parseInt(dp[2], 10);
@@ -223,15 +229,15 @@ function parseCSV(text) {
     const hh = parseInt(tp[0], 10);
     const mi = parseInt(tp[1] || '0', 10);
 
-    const dt = new Date(yr, mm, dd, hh, mi, 0);
+    const dt   = new Date(yr, mm, dd, hh, mi, 0);
     if (isNaN(dt.getTime())) continue;
 
-    const dist = n(p[2]);
-    const temp = n(p[3]);
-    const hum  = n(p[4]);
-    const bat  = n(p[5]);
+    const dist = toNum(p[2]);
+    const temp = toNum(p[3]);
+    const hum  = toNum(p[4]);
+    const bat  = toNum(p[5]);
 
-    if (isNaN(dist) || isNaN(temp) || isNaN(hum) || isNaN(bat)) continue;
+    if ([dist, temp, hum, bat].some(isNaN)) continue;
 
     rows.push({ dt, dist, temp, hum, bat });
   }
@@ -240,18 +246,18 @@ function parseCSV(text) {
   return rows;
 }
 
-// Валидный уровень датчика: 0.204 и -1 — артефакты
+// Фильтр аномальных показаний датчика
 function okDist(d) { return d >= 0.35 && d <= 1.5; }
 
-// ── CANVAS: круговой gauge ────────────────────────────────
+// ── CANVAS GAUGES ────────────────────────────────────────────
 function drawCircle(canvasId, pct, color) {
   const dark = document.body.classList.contains('dark');
   const bg   = dark ? '#334155' : '#e2e8f0';
   const cv   = document.getElementById(canvasId);
   const ctx  = cv.getContext('2d');
-  const w = cv.width, h = cv.height;
-  ctx.clearRect(0, 0, w, h);
-  const cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 8;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cx = cv.width / 2, cy = cv.height / 2;
+  const r  = Math.min(cx, cy) - 8;
   ctx.lineWidth = 10; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.strokeStyle = bg; ctx.stroke();
@@ -259,15 +265,14 @@ function drawCircle(canvasId, pct, color) {
   ctx.strokeStyle = color; ctx.stroke();
 }
 
-// ── CANVAS: полукруг батареи ─────────────────────────────
 function drawBat(pct, color) {
   const dark = document.body.classList.contains('dark');
   const bg   = dark ? '#334155' : '#e2e8f0';
   const cv   = document.getElementById('batGauge');
   const ctx  = cv.getContext('2d');
-  const w = cv.width, h = cv.height;
-  ctx.clearRect(0, 0, w, h);
-  const cx = w / 2, cy = h - 4, r = cx - 6;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cx = cv.width / 2, cy = cv.height - 4;
+  const r  = cx - 6;
   ctx.lineWidth = 9; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 0);
   ctx.strokeStyle = bg; ctx.stroke();
@@ -275,13 +280,13 @@ function drawBat(pct, color) {
   ctx.strokeStyle = color; ctx.stroke();
 }
 
-// ── CHART HELPER ─────────────────────────────────────────
+// ── ГРАФИКИ ──────────────────────────────────────────────────
 const charts = {};
-function mkChart(id, labels, datasets, extraScales) {
+function mkChart(id, labels, datasets, customScales) {
   const dark = document.body.classList.contains('dark');
-  const gc = dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
-  const tc = dark ? '#94a3b8' : '#64748b';
-  const baseScales = {
+  const gc   = dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+  const tc   = dark ? '#94a3b8' : '#64748b';
+  const defaultScales = {
     x: { ticks: { color: tc, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: gc } },
     y: { ticks: { color: tc }, grid: { color: gc } }
   };
@@ -292,13 +297,18 @@ function mkChart(id, labels, datasets, extraScales) {
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: datasets.length > 1, labels: { color: tc, font: { size: 11 }, boxWidth: 10 } } },
-      scales: extraScales || baseScales
+      plugins: {
+        legend: {
+          display: datasets.length > 1,
+          labels: { color: tc, font: { size: 11 }, boxWidth: 10 }
+        }
+      },
+      scales: customScales || defaultScales
     }
   });
 }
 
-// ── ПРОГНОЗ: суточный профиль Δ ──────────────────────────
+// ── ПРОГНОЗ: суточный профиль Δ ──────────────────────────────
 function buildForecast(rows, curLevel, curDt) {
   const valid  = rows.filter(r => okDist(r.dist));
   const deltas = Array.from({ length: 24 }, () => []);
@@ -310,7 +320,9 @@ function buildForecast(rows, curLevel, curDt) {
     deltas[b.dt.getHours()].push((b.dist - a.dist) / (ms / 3600000));
   }
 
-  const avg = deltas.map(arr => arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : 0);
+  const avg = deltas.map(arr =>
+    arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : 0
+  );
 
   function reach(target) {
     let lv = curLevel, dt = new Date(curDt);
@@ -318,53 +330,65 @@ function buildForecast(rows, curLevel, curDt) {
       lv += avg[dt.getHours()];
       dt  = new Date(dt.getTime() + 3600000);
       if (target > curLevel ? lv >= target : lv <= target)
-        return dt.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        return dt.toLocaleString('ru-RU', {
+          day: '2-digit', month: '2-digit',
+          hour: '2-digit', minute: '2-digit'
+        });
     }
     return 'не ожидается (7д)';
   }
+
   return { high: reach(0.65), low: reach(0.50) };
 }
 
-// ── ВОЗРАСТ ДАННЫХ ───────────────────────────────────────
+// ── УТИЛИТЫ ──────────────────────────────────────────────────
 function fmtAge(ms) {
   const m = Math.round(ms / 60000);
   return m < 60 ? `обновлено ${m} мин назад` : `обновлено ${Math.round(m / 60)} ч назад`;
 }
 
-// ── ОШИБКА ───────────────────────────────────────────────
+function fmtTime(dt) {
+  return String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+}
+
 function showError(msg) {
   document.getElementById('loader').style.display = 'none';
   const b = document.getElementById('errBox');
   b.style.display = 'block';
-  b.innerHTML = `⚠️ ${msg}`;
+  b.innerHTML = '⚠️ ' + msg;
 }
 
-// ── MAIN ─────────────────────────────────────────────────
+// ── MAIN ─────────────────────────────────────────────────────
 async function loadData() {
   try {
     const res = await fetch('./data.csv?t=' + Date.now());
-    if (!res.ok) throw new Error(`Файл data.csv не найден (HTTP ${res.status}). Убедитесь, что файл лежит в корне репозитория.`);
+    if (!res.ok) throw new Error(`Файл data.csv не найден (HTTP ${res.status})`);
 
     const text = await res.text();
-    if (!text.trim()) throw new Error('Файл data.csv пустой.');
+    if (!text.trim()) throw new Error('Файл data.csv пустой');
 
     const rows = parseCSV(text);
-    if (!rows.length) throw new Error('Не удалось распарсить ни одной строки из data.csv.<br>Проверьте формат: каждая строка должна содержать 6 колонок разделённых пробелами.<br>Пример: <code>20.02.26 16:02 0,680 0,8 13,9 4,05</code>');
+    if (!rows.length) throw new Error(
+      'Не удалось разобрать data.csv.<br>' +
+      'Ожидаемый формат:<br>' +
+      '<code>date,time,dist,temp,hum,bat</code><br>' +
+      '<code>07.02.26,14:59,"0,676","0,8",13,"4,1"</code>'
+    );
 
     document.getElementById('loader').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+    document.getElementById('app').style.display    = 'block';
 
     const now  = new Date();
     const last = rows[rows.length - 1];
 
-    // Возраст
+    // Возраст данных
     document.getElementById('dataAge').textContent = fmtAge(now - last.dt);
 
-    // Темп / Влажность (берём из последней строки без фильтрации — датчик всегда пишет)
+    // Темп / Влажность
     document.getElementById('tempVal').textContent = last.temp.toFixed(1) + ' °C';
     document.getElementById('humVal').textContent  = last.hum.toFixed(1)  + ' %';
 
-    // Последний валидный dist
+    // Последний валидный уровень
     let lv = null, lvRow = null;
     for (let i = rows.length - 1; i >= 0; i--) {
       if (okDist(rows[i].dist)) { lv = rows[i].dist; lvRow = rows[i]; break; }
@@ -382,16 +406,16 @@ async function loadData() {
       badge.textContent = label;
       badge.className   = 'badge ' + cls;
 
-      // Gauge уровня (0.40 = мин, 0.75 = макс по данным)
-      const pctLv = Math.max(0, Math.min(1, (lv - 0.40) / (0.75 - 0.40)));
-      drawCircle('lvGauge', pctLv, color);
+      // Gauge уровня (диапазон 0.40–0.80)
+      drawCircle('lvGauge', Math.max(0, Math.min(1, (lv - 0.40) / 0.40)), color);
 
-      // Среднее за этот час за 7д
-      const ago7   = new Date(now - 7 * 86400000);
-      const hrNow  = now.getHours();
-      const same   = rows.filter(r => r.dt > ago7 && r.dt.getHours() === hrNow && okDist(r.dist));
+      // Среднее в этот час за 7д
+      const ago7  = new Date(now - 7 * 86400000);
+      const same  = rows.filter(r => r.dt > ago7 && r.dt.getHours() === now.getHours() && okDist(r.dist));
       document.getElementById('avgHour').textContent =
-        same.length ? (same.reduce((s, r) => s + r.dist, 0) / same.length).toFixed(3) + ' м' : 'нет данных';
+        same.length
+          ? (same.reduce((s, r) => s + r.dist, 0) / same.length).toFixed(3) + ' м'
+          : 'нет данных';
 
       // Прогноз
       const fc = buildForecast(rows, lv, lvRow.dt);
@@ -399,23 +423,18 @@ async function loadData() {
       document.getElementById('fc50').textContent = lv <= 0.50 ? '✅ уже достигнут' : fc.low;
     }
 
-    // Батарея
-    const bat = last.bat;
-    const BAT_MIN = 3.1, BAT_MAX = 4.1;
-    const pctB  = Math.max(0, Math.min(1, (bat - BAT_MIN) / (BAT_MAX - BAT_MIN)));
-    const batClr = pctB > 0.6 ? '#22c55e' : pctB > 0.3 ? '#f59e0b' : '#ef4444';
-    drawBat(pctB, batClr);
+    // Батарея (3.1В = 0%, 4.1В = 100%)
+    const bat  = last.bat;
+    const pctB = Math.max(0, Math.min(1, (bat - 3.1) / 1.0));
+    const batC = pctB > 0.6 ? '#22c55e' : pctB > 0.3 ? '#f59e0b' : '#ef4444';
+    drawBat(pctB, batC);
     document.getElementById('batNum').textContent = bat.toFixed(2) + ' В';
     document.getElementById('batSub').textContent = Math.round(pctB * 100) + '% заряда';
 
-    // ── Графики ──────────────────────────────────────────
+    // ── Графики ─────────────────────────────────────────────
     const dark = document.body.classList.contains('dark');
     const gc   = dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
     const tc   = dark ? '#94a3b8' : '#64748b';
-
-    function fmtTime(dt) {
-      return String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-    }
 
     // 24ч уровень
     const ms24 = now - 24 * 3600000;
@@ -427,31 +446,35 @@ async function loadData() {
     }]);
 
     // 7д средний за сутки
-    const ms7  = now - 7 * 86400000;
+    const ms7   = now - 7 * 86400000;
     const byDay = {};
     rows.filter(r => r.dt > ms7 && okDist(r.dist)).forEach(r => {
-      const k = String(r.dt.getDate()).padStart(2, '0') + '.' + String(r.dt.getMonth() + 1).padStart(2, '0');
+      const k = String(r.dt.getDate()).padStart(2, '0') + '.'
+              + String(r.dt.getMonth() + 1).padStart(2, '0');
       (byDay[k] = byDay[k] || []).push(r.dist);
     });
     const lbl7 = Object.keys(byDay);
-    const dat7 = lbl7.map(k => +(byDay[k].reduce((s, x) => s + x, 0) / byDay[k].length).toFixed(4));
+    const dat7 = lbl7.map(k =>
+      +(byDay[k].reduce((s, x) => s + x, 0) / byDay[k].length).toFixed(4)
+    );
     mkChart('c7d', lbl7, [{
       label: 'Средний уровень (м)', data: dat7,
       borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)',
       fill: true, tension: .3, pointRadius: 5, pointHoverRadius: 7
     }]);
 
-    // Темп + влажность 24ч (двойная ось)
-    const rTH  = rows.filter(r => r.dt > ms24);
-    const lblTH = rTH.map(r => fmtTime(r.dt));
-    mkChart('cTH', lblTH, [
+    // Темп + влажность 24ч (двойная ось Y)
+    const rTH   = rows.filter(r => r.dt > ms24);
+    mkChart('cTH', rTH.map(r => fmtTime(r.dt)), [
       {
         label: 'Температура (°C)', data: rTH.map(r => r.temp),
-        borderColor: '#f97316', fill: false, tension: .3, pointRadius: 2, yAxisID: 'yT'
+        borderColor: '#f97316', fill: false, tension: .3,
+        pointRadius: 2, yAxisID: 'yT'
       },
       {
         label: 'Влажность (%)', data: rTH.map(r => r.hum),
-        borderColor: '#06b6d4', fill: false, tension: .3, pointRadius: 2, yAxisID: 'yH'
+        borderColor: '#06b6d4', fill: false, tension: .3,
+        pointRadius: 2, yAxisID: 'yH'
       }
     ], {
       x:  { ticks: { color: tc, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: gc } },
