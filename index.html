@@ -23,12 +23,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 .h-left{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700}
 .h-right{display:flex;align-items:center;gap:8px}
-#dataAge{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
+#dataAge{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;transition:.3s}
+#dataAge.stale{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+body.dark #dataAge.stale{background:#450a0a;color:#fca5a5;border-color:#7f1d1d}
+#gapWarn{display:none;font-size:12px;font-weight:600;background:#fef9c3;color:#a16207;border:1px solid #fde68a;padding:4px 10px;border-radius:20px}
+body.dark #gapWarn{background:#451a03;color:#fcd34d;border-color:#78350f}
+#gapWarn.show{display:block}
 .btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
 .btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
-.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sec-time{font-size:12px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:2px 10px;border-radius:20px;text-transform:none;letter-spacing:0}
 
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
@@ -39,7 +44,6 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
 .val{font-size:30px;font-weight:800;line-height:1}
 .sub{font-size:12px;color:var(--text2);margin-top:5px}
 
-/* Уровень */
 .lv-gauge-wrap{position:relative;width:100px;height:100px;margin:8px auto}
 .lv-gauge-wrap canvas{position:absolute;top:0;left:0}
 .lv-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -54,18 +58,18 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
 .avg-mini{font-size:11px;color:var(--text2);margin-bottom:4px}
 .avg-mini b{color:var(--text)}
 
-/* Батарея */
 .bat-wrap{position:relative;width:90px;height:55px;margin:8px auto 4px}
 .bat-num{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap}
 
-/* Алерт влажности */
 .hum-alert{display:none;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;margin-top:8px;text-align:center;line-height:1.4}
 body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 .hum-alert.show{display:block}
 
-/* Графики */
-.chart-card{padding:18px}
-.chart-wrap{position:relative;height:200px}
+.chart-card{padding:18px;position:relative}
+.gap-badge{display:none;position:absolute;top:12px;right:14px;font-size:10px;font-weight:600;background:#fef9c3;color:#a16207;border:1px solid #fde68a;padding:2px 8px;border-radius:20px;z-index:2}
+body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
+.gap-badge.show{display:block}
+.chart-wrap{position:relative;height:210px}
 .chart-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)}
 
 #errBox{display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:12px;padding:14px 18px;margin:20px 0;font-size:14px;line-height:1.6}
@@ -86,6 +90,7 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 <header>
   <div class="h-left">🏠 Сливная яма</div>
   <div class="h-right">
+    <span id="gapWarn">⚠️ есть пропуски</span>
     <span id="dataAge">—</span>
     <button class="btn" onclick="toggleTheme()">🌙 Тема</button>
   </div>
@@ -98,8 +103,8 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
     <span class="sec-time" id="secTime">—</span>
   </div>
 
+  <!-- РЯД 1 -->
   <div class="g4">
-    <!-- Уровень воды -->
     <div class="card" style="text-align:center">
       <div class="lbl">📏 Уровень воды</div>
       <div class="lv-gauge-wrap">
@@ -117,7 +122,6 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
       </div>
     </div>
 
-    <!-- Батарея -->
     <div class="card" style="text-align:center">
       <div class="lbl">🔋 Батарея</div>
       <div class="bat-wrap">
@@ -127,14 +131,12 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
       <div class="sub" id="batSub">—</div>
     </div>
 
-    <!-- Температура -->
     <div class="card" style="text-align:center">
       <div class="lbl">🌡️ Температура</div>
       <div class="val" id="tempVal" style="margin-top:32px">—</div>
       <div class="sub">°C в яме</div>
     </div>
 
-    <!-- Влажность -->
     <div class="card" style="text-align:center">
       <div class="lbl">💧 Влажность</div>
       <div class="val" id="humVal" style="margin-top:32px">—</div>
@@ -143,33 +145,49 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
     </div>
   </div>
 
-  <!-- РЯД 2 -->
-  <div class="sec">📉 Уровень воды</div>
+  <!-- РЯД 2: два графика уровня за 7 дней -->
+  <div class="sec">📉 Уровень воды — 7 дней</div>
   <div class="g2">
     <div class="card chart-card">
-      <div class="chart-title">За 24 часа</div>
-      <div class="chart-wrap"><canvas id="c24"></canvas></div>
+      <div class="chart-title">Среднее за день (7 дней)</div>
+      <span class="gap-badge" id="gap7avg">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c7avg"></canvas></div>
     </div>
     <div class="card chart-card">
-      <div class="chart-title">За 7 дней</div>
-      <div class="chart-wrap"><canvas id="c7d"></canvas></div>
+      <div class="chart-title">Все точки за 7 дней</div>
+      <span class="gap-badge" id="gap7pts">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c7pts"></canvas></div>
     </div>
   </div>
 
-  <!-- РЯД 3 -->
-  <div class="sec">📆 Средние значения уровня</div>
+  <!-- РЯД 2б: 24 часа -->
+  <div class="sec">📉 Уровень воды — 24 часа</div>
   <div class="g2">
+    <div class="card chart-card">
+      <div class="chart-title">Все точки за 24 часа</div>
+      <span class="gap-badge" id="gap24">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c24"></canvas></div>
+    </div>
     <div class="card chart-card">
       <div class="chart-title">По часам суток — среднее за 7 дней</div>
       <div class="chart-wrap"><canvas id="cByHour"></canvas></div>
     </div>
+  </div>
+
+  <!-- РЯД 3: средние -->
+  <div class="sec">📆 Средние значения уровня</div>
+  <div class="g2">
     <div class="card chart-card">
       <div class="chart-title">По дням — среднее за 30 дней</div>
       <div class="chart-wrap"><canvas id="cByDay"></canvas></div>
     </div>
+    <div class="card chart-card">
+      <div class="chart-title">По дням — среднее за 7 дней (линия)</div>
+      <div class="chart-wrap"><canvas id="cByDay7"></canvas></div>
+    </div>
   </div>
 
-  <!-- РЯД 4 -->
+  <!-- РЯД 4: темп и влажность -->
   <div class="sec">🌡️ Температура и влажность за 24 часа</div>
   <div class="g2">
     <div class="card chart-card">
@@ -186,368 +204,419 @@ body.dark .hum-alert{background:#450a0a;color:#fca5a5}
 
 <script>
 // ── ТЕМА ─────────────────────────────────────────────────────
-function toggleTheme() {
-  const d = document.body.classList.toggle('dark');
-  localStorage.setItem('theme', d ? 'dark' : 'light');
-  document.querySelector('.btn').textContent = d ? '☀️ Тема' : '🌙 Тема';
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('theme',d?'dark':'light');
+  document.querySelector('.btn').textContent=d?'☀️ Тема':'🌙 Тема';
 }
-if (localStorage.getItem('theme') === 'dark') {
+if(localStorage.getItem('theme')==='dark'){
   document.body.classList.add('dark');
-  document.querySelector('.btn').textContent = '☀️ Тема';
+  document.querySelector('.btn').textContent='☀️ Тема';
 }
 
-// ── CSV ПАРСЕР ───────────────────────────────────────────────
-function parseLine(line) {
-  const fields = []; let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { fields.push(cur.trim()); cur = ''; }
-    else { cur += c; }
+// ── CSV ───────────────────────────────────────────────────────
+function parseLine(line){
+  const f=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"')inQ=!inQ;
+    else if(c===','&&!inQ){f.push(cur.trim());cur='';}
+    else cur+=c;
   }
-  fields.push(cur.trim());
-  return fields;
+  f.push(cur.trim());return f;
 }
+function toNum(s){return parseFloat((s||'').replace(/"/g,'').replace(',','.'));}
 
-function toNum(s) {
-  return parseFloat((s || '').replace(/"/g, '').replace(',', '.'));
-}
-
-function parseCSV(text) {
-  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
-                    .split('\n').map(l=>l.trim()).filter(Boolean);
-  if (lines.length < 2) return [];
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const p = parseLine(lines[i]);
-    if (p.length < 6) continue;
-    const dp = p[0].split('.');
-    if (dp.length < 3) continue;
-    const yr = parseInt(dp[2],10) < 100 ? 2000+parseInt(dp[2],10) : parseInt(dp[2],10);
-    const tp = p[1].split(':');
-    const dt = new Date(yr, parseInt(dp[1],10)-1, parseInt(dp[0],10),
-                        parseInt(tp[0],10), parseInt(tp[1]||'0',10));
-    if (isNaN(dt.getTime())) continue;
-    const dist = toNum(p[2]);
-    const temp = toNum(p[3]);
-    const hum  = toNum(p[4]);
-    const bat  = toNum(p[5]);
-    if ([dist,temp,hum,bat].some(isNaN)) continue;
-    rows.push({ dt, dist, temp, hum, bat });
+function parseCSV(text){
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+                  .split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)return[];
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const p=parseLine(lines[i]);
+    if(p.length<6)continue;
+    const dp=p[0].split('.');
+    if(dp.length<3)continue;
+    const yr=parseInt(dp[2],10)<100?2000+parseInt(dp[2],10):parseInt(dp[2],10);
+    const tp=p[1].split(':');
+    const dt=new Date(yr,parseInt(dp[1],10)-1,parseInt(dp[0],10),parseInt(tp[0],10),parseInt(tp[1]||'0',10));
+    if(isNaN(dt.getTime()))continue;
+    const dist=toNum(p[2]),temp=toNum(p[3]),hum=toNum(p[4]),bat=toNum(p[5]);
+    if([dist,temp,hum,bat].some(isNaN))continue;
+    rows.push({dt,dist,temp,hum,bat,synthetic:false});
   }
-  rows.sort((a,b) => a.dt - b.dt);
+  rows.sort((a,b)=>a.dt-b.dt);
   return rows;
 }
 
+// ── ВАЛИДАЦИЯ ────────────────────────────────────────────────
+function okDist(d){return d<-0.2&&d>-0.95&&Math.abs(d+1.0)>0.01;}
+
+// ── GAP FILL ─────────────────────────────────────────────────
+function gapFill(rows,maxGapHours=48){
+  const STEP=3600000;
+  const maxMs=maxGapHours*STEP;
+  const out=[];let hadGap=false;
+  for(let i=0;i<rows.length;i++){
+    const cur=rows[i];
+    if(i>0){
+      const prev=rows[i-1];
+      const diff=cur.dt-prev.dt;
+      if(diff>90*60*1000&&diff<=maxMs){
+        hadGap=true;
+        let fillDist=okDist(prev.dist)?prev.dist:null;
+        if(fillDist===null)for(let j=out.length-1;j>=0;j--){if(okDist(out[j].dist)){fillDist=out[j].dist;break;}}
+        if(fillDist!==null){
+          let t=new Date(prev.dt.getTime()+STEP);
+          while(t<cur.dt-30*60*1000){
+            out.push({dt:new Date(t),dist:fillDist,temp:prev.temp,hum:prev.hum,bat:prev.bat,synthetic:true});
+            t=new Date(t.getTime()+STEP);
+          }
+        }
+      }else if(diff>maxMs)hadGap=true;
+    }
+    out.push(cur);
+  }
+  return{rows:out,hadGap};
+}
+
 // ── УРОВЕНЬ ──────────────────────────────────────────────────
-// dist отрицательный: -1.000 = артефакт датчика (ровно -1)
-// валидный диапазон: от -0.3 до -0.95 (реальные значения)
-function okDist(d) {
-  return d < -0.2 && d > -0.95 && Math.abs(d - (-1.0)) > 0.01;
+function levelStatus(d){
+  if(d>-0.5) return{color:'#ef4444',cls:'sr',label:'🔴 Высокий'};
+  if(d>=-0.65)return{color:'#f59e0b',cls:'sy',label:'🟡 Средний'};
+  return           {color:'#22c55e',cls:'sg',label:'🟢 Низкий'};
 }
-
-function levelStatus(d) {
-  if (d > -0.5)   return { color:'#ef4444', cls:'sr', label:'🔴 Высокий' };
-  if (d >= -0.65) return { color:'#f59e0b', cls:'sy', label:'🟡 Средний' };
-  return                 { color:'#22c55e', cls:'sg', label:'🟢 Низкий'  };
+function lvPct(d){return Math.max(0,Math.min(1,Math.abs(d)/0.80));}
+function zoneColor(v){
+  if(v>-0.5) return'rgba(239,68,68,.75)';
+  if(v>=-0.65)return'rgba(245,158,11,.75)';
+  return          'rgba(34,197,94,.75)';
 }
-
-// Gauge: ближе к 0 — плохо (мало места), дальше — хорошо
-// Диапазон отображения: 0 .. -0.80
-function lvPct(d) { return Math.max(0, Math.min(1, Math.abs(d) / 0.80)); }
 
 // ── CANVAS ───────────────────────────────────────────────────
-function drawCircle(id, pct, color) {
-  const dark = document.body.classList.contains('dark');
-  const bg = dark ? '#334155' : '#e2e8f0';
-  const cv = document.getElementById(id);
-  const ctx = cv.getContext('2d');
+function drawCircle(id,pct,color){
+  const dark=document.body.classList.contains('dark');
+  const cv=document.getElementById(id),ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  const cx=cv.width/2, cy=cv.height/2, r=Math.min(cx,cy)-8;
-  ctx.lineWidth=10; ctx.lineCap='round';
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle=bg; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);
-  ctx.strokeStyle=color; ctx.stroke();
+  const cx=cv.width/2,cy=cv.height/2,r=Math.min(cx,cy)-8;
+  ctx.lineWidth=10;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle=dark?'#334155':'#e2e8f0';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);
+  ctx.strokeStyle=color;ctx.stroke();
 }
-
-function drawBat(pct, color) {
-  const dark = document.body.classList.contains('dark');
-  const bg = dark ? '#334155' : '#e2e8f0';
-  const cv = document.getElementById('batGauge');
-  const ctx = cv.getContext('2d');
+function drawBat(pct,color){
+  const dark=document.body.classList.contains('dark');
+  const cv=document.getElementById('batGauge'),ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  const cx=cv.width/2, cy=cv.height-4, r=cx-6;
-  ctx.lineWidth=9; ctx.lineCap='round';
-  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,0); ctx.strokeStyle=bg; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,Math.PI+pct*Math.PI);
-  ctx.strokeStyle=color; ctx.stroke();
+  const cx=cv.width/2,cy=cv.height-4,r=cx-6;
+  ctx.lineWidth=9;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,0);
+  ctx.strokeStyle=dark?'#334155':'#e2e8f0';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+pct*Math.PI);
+  ctx.strokeStyle=color;ctx.stroke();
 }
 
 // ── ГРАФИКИ ──────────────────────────────────────────────────
-const CH = {};
+const CH={};
+function gc(){return document.body.classList.contains('dark')?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';}
+function tc(){return document.body.classList.contains('dark')?'#94a3b8':'#64748b';}
+function xSc(){return{ticks:{color:tc(),maxTicksLimit:8,maxRotation:0},grid:{color:gc()}};}
 
-function gc() { return document.body.classList.contains('dark') ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)'; }
-function tc() { return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
+// Ось Y для отрицательных уровней: 0 вверху, -0.95 внизу (НЕ reverse!)
+function yLvSc(){
+  return{
+    min:-0.95,
+    max:0,
+    ticks:{color:tc(),callback:v=>v.toFixed(2)},
+    grid:{color:gc()}
+  };
+}
+// Обычная ось Y (температура, влажность)
+function yNormSc(){return{ticks:{color:tc()},grid:{color:gc()}};}
+// Ось Y для баров (уровень) — тоже 0 вверху
+function yBarLvSc(){
+  return{
+    min:-0.95,
+    max:0,
+    ticks:{color:tc(),callback:v=>v.toFixed(2)},
+    grid:{color:gc()}
+  };
+}
 
-// Инвертированная шкала для уровня воды
-// reverse:true — в Chart.js ставится прямо в объект scale
-function yInv() {
-  return { reverse:true, ticks:{color:tc()}, grid:{color:gc()} };
-}
-function yNorm() {
-  return { ticks:{color:tc()}, grid:{color:gc()} };
-}
-function xScale() {
-  return { ticks:{color:tc(), maxTicksLimit:8, maxRotation:0}, grid:{color:gc()} };
-}
-
-function mkLine(id, labels, data, color, fillColor, invertY) {
-  if (CH[id]) CH[id].destroy();
-  CH[id] = new Chart(document.getElementById(id), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: color,
-        backgroundColor: fillColor,
-        fill: true,
-        tension: .35,
-        pointRadius: data.length > 100 ? 0 : 2,
-        pointHoverRadius: 5
+// Линейный график с поддержкой синтетических точек
+function mkLine(id,pts,color,fillColor,isLevel){
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'line',
+    data:{
+      labels:pts.map(p=>p.label),
+      datasets:[{
+        data:pts.map(p=>p.value),
+        borderColor:color,
+        backgroundColor:fillColor,
+        fill:true,tension:.35,
+        pointRadius:pts.length>150?0:pts.length>50?1:3,
+        pointHoverRadius:5,
+        segment:{
+          borderDash:ctx=>{const i=ctx.p0DataIndex;return(pts[i]&&pts[i].synthetic)?[4,4]:[];},
+          borderColor:ctx=>{const i=ctx.p0DataIndex;return(pts[i]&&pts[i].synthetic)?'rgba(168,85,247,.6)':color;}
+        }
       }]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:'index', intersect:false },
-      plugins: { legend:{ display:false } },
-      scales: {
-        x: xScale(),
-        y: invertY ? yInv() : yNorm()
-      }
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const p=pts[ctx.dataIndex];
+          const v=ctx.parsed.y;
+          if(v===null||v===undefined)return'';
+          return` ${v.toFixed(3)}${p&&p.synthetic?' (дубль)':''}`;
+        }}}
+      },
+      scales:{x:xSc(),y:isLevel?yLvSc():yNormSc()}
     }
   });
 }
 
-function mkBar(id, labels, data, barColors) {
-  if (CH[id]) CH[id].destroy();
-  CH[id] = new Chart(document.getElementById(id), {
-    type: 'bar',
-    data: {
+// Линейный график среднего (без synthetic, простые значения)
+function mkLineSimple(id,labels,data,color,fillColor,isLevel){
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'line',
+    data:{
       labels,
-      datasets: [{
+      datasets:[{
         data,
-        backgroundColor: barColors,
-        borderRadius: 4,
-        barPercentage: .75
+        borderColor:color,backgroundColor:fillColor,
+        fill:true,tension:.4,
+        pointRadius:5,pointHoverRadius:7,
+        pointBackgroundColor:color,
+        borderWidth:2
       }]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:'index', intersect:false },
-      plugins: { legend:{ display:false } },
-      scales: {
-        x: xScale(),
-        y: yInv()
-      }
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(3)}`}}
+      },
+      scales:{x:xSc(),y:isLevel?yLvSc():yNormSc()}
+    }
+  });
+}
+
+function mkBar(id,labels,data,barColors,isLevel){
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:barColors,borderRadius:4,barPercentage:.75}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}},
+      scales:{x:xSc(),y:isLevel?yBarLvSc():yNormSc()}
     }
   });
 }
 
 // ── ПРОГНОЗ ──────────────────────────────────────────────────
-function buildForecast(rows, lv, lvDt) {
-  const valid = rows.filter(r => okDist(r.dist));
-  const deltas = Array.from({length:24}, ()=>[]);
-  for (let i = 1; i < valid.length; i++) {
-    const a=valid[i-1], b=valid[i];
-    const ms = b.dt - a.dt;
-    if (ms <= 0 || ms > 2*3600000) continue;
-    deltas[b.dt.getHours()].push((b.dist - a.dist) / (ms/3600000));
+function buildForecast(rawRows,lv,lvDt){
+  const valid=rawRows.filter(r=>okDist(r.dist));
+  const deltas=Array.from({length:24},()=>[]);
+  for(let i=1;i<valid.length;i++){
+    const a=valid[i-1],b=valid[i];
+    const ms=b.dt-a.dt;
+    if(ms<=0||ms>2*3600000)continue;
+    deltas[b.dt.getHours()].push((b.dist-a.dist)/(ms/3600000));
   }
-  const avg = deltas.map(arr => arr.length ? arr.reduce((s,x)=>s+x,0)/arr.length : 0);
-
-  function reach(target, goUp) {
-    let v = lv, dt = new Date(lvDt);
-    for (let h = 0; h < 7*24; h++) {
-      v += avg[dt.getHours()];
-      dt = new Date(dt.getTime() + 3600000);
-      if (goUp ? v >= target : v <= target)
+  const avg=deltas.map(arr=>arr.length?arr.reduce((s,x)=>s+x,0)/arr.length:0);
+  function reach(target,goUp){
+    let v=lv,dt=new Date(lvDt);
+    for(let h=0;h<7*24;h++){
+      v+=avg[dt.getHours()];
+      dt=new Date(dt.getTime()+3600000);
+      if(goUp?v>=target:v<=target)
         return dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     }
-    return 'не ожидается (7д)';
+    return'не ожидается (7д)';
   }
-  return {
-    high: reach(-0.50, true),
-    low:  reach(-0.65, false)
-  };
+  return{high:reach(-0.50,true),low:reach(-0.65,false)};
 }
 
 // ── УТИЛИТЫ ──────────────────────────────────────────────────
-function fmtAge(ms) {
-  const m = Math.round(ms/60000);
-  return m < 60 ? `обновлено ${m} мин назад` : `обновлено ${Math.round(m/60)} ч назад`;
-}
-function fmtTime(dt) {
-  return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
-}
-function fmtDay(dt) {
-  return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');
-}
-function zoneColor(v) {
-  if (v > -0.5)   return 'rgba(239,68,68,.75)';
-  if (v >= -0.65) return 'rgba(245,158,11,.75)';
-  return                 'rgba(34,197,94,.75)';
-}
-function showError(msg) {
+function fmtAge(ms){const m=Math.round(ms/60000);return m<60?`обновлено ${m} мин назад`:`обновлено ${Math.round(m/60)} ч назад`;}
+function fmtTime(dt){return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
+function fmtDay(dt){return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');}
+function showError(msg){
   document.getElementById('loader').style.display='none';
-  const b=document.getElementById('errBox');
-  b.style.display='block';
-  b.innerHTML='⚠️ '+msg;
+  const b=document.getElementById('errBox');b.style.display='block';b.innerHTML='⚠️ '+msg;
 }
 
 // ── MAIN ─────────────────────────────────────────────────────
-async function loadData() {
-  try {
-    const res = await fetch('./data.csv?t='+Date.now());
-    if (!res.ok) throw new Error(`data.csv не найден (HTTP ${res.status})`);
-    const text = await res.text();
-    if (!text.trim()) throw new Error('data.csv пустой');
+async function loadData(){
+  try{
+    const res=await fetch('./data.csv?t='+Date.now());
+    if(!res.ok)throw new Error(`data.csv не найден (HTTP ${res.status})`);
+    const text=await res.text();
+    if(!text.trim())throw new Error('data.csv пустой');
 
-    const rows = parseCSV(text);
-    if (!rows.length) throw new Error(
-      'Не удалось разобрать data.csv.<br>' +
+    const rawRows=parseCSV(text);
+    if(!rawRows.length)throw new Error(
+      'Не удалось разобрать data.csv.<br>'+
       'Пример: <code>07.02.26,14:59,"-0,676","0,8",13,"4,1"</code>'
     );
+
+    const{rows,hadGap}=gapFill(rawRows,48);
 
     document.getElementById('loader').style.display='none';
     document.getElementById('app').style.display='block';
 
-    const now  = new Date();
-    const last = rows[rows.length-1];
+    const now=new Date();
+    const lastReal=rawRows[rawRows.length-1];
 
-    // Время последней записи
-    document.getElementById('dataAge').textContent = fmtAge(now - last.dt);
-    document.getElementById('secTime').textContent =
-      last.dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    // Шапка
+    const ageMs=now-lastReal.dt;
+    const ageEl=document.getElementById('dataAge');
+    ageEl.textContent=fmtAge(ageMs);
+    ageEl.className=ageMs>2*3600000?'stale':'';
+    document.getElementById('gapWarn').classList.toggle('show',hadGap);
+    document.getElementById('secTime').textContent=
+      lastReal.dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
     // Темп / Влажность
-    document.getElementById('tempVal').textContent = last.temp.toFixed(1)+' °C';
-    document.getElementById('humVal').textContent  = last.hum.toFixed(1)+' %';
+    document.getElementById('tempVal').textContent=lastReal.temp.toFixed(1)+' °C';
+    document.getElementById('humVal').textContent=lastReal.hum.toFixed(1)+' %';
 
     // Алерт влажности
-    const humAlert = document.getElementById('humAlert');
-    const lastN = rows.slice(-10);
-    const humRising = lastN.length === 10 &&
-      lastN.every((r,i) => i===0 || r.hum >= lastN[i-1].hum);
-    const humHigh = last.hum >= 40;
-    if (humRising || humHigh) {
+    const humAlert=document.getElementById('humAlert');
+    const lastN=rawRows.slice(-10);
+    const humRising=lastN.length===10&&lastN.every((r,i)=>i===0||r.hum>=lastN[i-1].hum);
+    const humHigh=lastReal.hum>=40;
+    if(humRising||humHigh){
       humAlert.classList.add('show');
-      humAlert.textContent = humHigh
-        ? `⚠️ ${last.hum.toFixed(1)}% — выше 40%!`
-        : '⚠️ Влажность растёт 10 измерений подряд!';
-    } else {
-      humAlert.classList.remove('show');
-    }
+      humAlert.textContent=humHigh?`⚠️ ${lastReal.hum.toFixed(1)}% — выше 40%!`:'⚠️ Влажность растёт 10 измерений подряд!';
+    }else humAlert.classList.remove('show');
 
-    // Уровень — последний валидный
-    let lv=null, lvRow=null;
-    for (let i=rows.length-1; i>=0; i--) {
-      if (okDist(rows[i].dist)) { lv=rows[i].dist; lvRow=rows[i]; break; }
-    }
+    // Уровень
+    let lv=null,lvRow=null;
+    for(let i=rawRows.length-1;i>=0;i--){if(okDist(rawRows[i].dist)){lv=rawRows[i].dist;lvRow=rawRows[i];break;}}
+    if(lv!==null){
+      document.getElementById('lvNum').textContent=lv.toFixed(3);
+      const st=levelStatus(lv);
+      const badge=document.getElementById('lvBadge');
+      badge.textContent=st.label;badge.className='badge '+st.cls;
+      drawCircle('lvGauge',lvPct(lv),st.color);
 
-    if (lv !== null) {
-      document.getElementById('lvNum').textContent = lv.toFixed(3);
-      const st = levelStatus(lv);
-      const badge = document.getElementById('lvBadge');
-      badge.textContent = st.label;
-      badge.className   = 'badge '+st.cls;
-      drawCircle('lvGauge', lvPct(lv), st.color);
+      const ago7=new Date(now-7*86400000);
+      const same=rawRows.filter(r=>r.dt>ago7&&r.dt.getHours()===now.getHours()&&okDist(r.dist));
+      document.getElementById('avgHour').textContent=same.length
+        ?(same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м':'нет данных';
 
-      // Среднее в этот час за 7д
-      const ago7  = new Date(now - 7*86400000);
-      const same  = rows.filter(r => r.dt>ago7 && r.dt.getHours()===now.getHours() && okDist(r.dist));
-      document.getElementById('avgHour').textContent = same.length
-        ? (same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м'
-        : 'нет данных';
-
-      // Прогноз
-      const fc = buildForecast(rows, lv, lvRow.dt);
-      document.getElementById('fc50').textContent = lv >= -0.50 ? '✅ уже' : fc.high;
-      document.getElementById('fc65').textContent = lv <= -0.65 ? '✅ уже' : fc.low;
-    } else {
-      document.getElementById('lvNum').textContent = '—';
-      document.getElementById('lvBadge').textContent = '⚠️ нет данных';
+      const fc=buildForecast(rawRows,lv,lvRow.dt);
+      document.getElementById('fc50').textContent=lv>=-0.50?'✅ уже':fc.high;
+      document.getElementById('fc65').textContent=lv<=-0.65?'✅ уже':fc.low;
+    }else{
+      document.getElementById('lvNum').textContent='—';
+      document.getElementById('lvBadge').textContent='⚠️ нет данных';
     }
 
     // Батарея
-    const bat  = last.bat;
-    const pctB = Math.max(0, Math.min(1, (bat-3.1)/1.0));
-    const batC = pctB>0.6?'#22c55e':pctB>0.3?'#f59e0b':'#ef4444';
-    drawBat(pctB, batC);
-    document.getElementById('batNum').textContent = bat.toFixed(2)+' В';
-    document.getElementById('batSub').textContent = Math.round(pctB*100)+'% заряда';
+    const bat=lastReal.bat;
+    const pctB=Math.max(0,Math.min(1,(bat-3.1)/1.0));
+    const batC=pctB>0.6?'#22c55e':pctB>0.3?'#f59e0b':'#ef4444';
+    drawBat(pctB,batC);
+    document.getElementById('batNum').textContent=bat.toFixed(2)+' В';
+    document.getElementById('batSub').textContent=Math.round(pctB*100)+'% заряда';
 
-    // ── РЯД 2: линейные графики уровня ──────────────────────
-    const ms24 = now - 24*3600000;
-    const ms7  = now - 7*86400000;
+    // ── ВРЕМЕННЫЕ ДИАПАЗОНЫ ──────────────────────────────────
+    const ms24=now-24*3600000;
+    const ms7 =now-7*86400000;
+    const ms30=now-30*86400000;
 
-    const r24 = rows.filter(r => r.dt>ms24 && okDist(r.dist));
+    // ── РЯД 2: 7 дней ───────────────────────────────────────
+
+    // Среднее за день (7д) — только реальные данные, 7 точек
+    const dayMap7={};
+    rawRows.filter(r=>r.dt>ms7&&okDist(r.dist)).forEach(r=>{
+      const k=fmtDay(r.dt);
+      (dayMap7[k]=dayMap7[k]||[]).push(r.dist);
+    });
+    const d7labels=Object.keys(dayMap7);
+    const d7vals=d7labels.map(k=>+(dayMap7[k].reduce((s,x)=>s+x,0)/dayMap7[k].length).toFixed(4));
+    // Показываем плашку если есть дни без данных (пропуск > 0 дней)
+    document.getElementById('gap7avg').classList.toggle('show', hadGap && d7labels.length < 7);
+    mkLineSimple('c7avg', d7labels, d7vals, '#10b981','rgba(16,185,129,.12)', true);
+
+    // Все точки 7д — с gap-fill
+    const r7pts=rows.filter(r=>r.dt>ms7&&okDist(r.dist));
+    const hasSynth7=r7pts.some(r=>r.synthetic);
+    document.getElementById('gap7pts').classList.toggle('show',hasSynth7);
+    mkLine('c7pts',
+      r7pts.map(r=>({label:fmtDay(r.dt)+' '+fmtTime(r.dt),value:r.dist,synthetic:r.synthetic})),
+      '#3b82f6','rgba(59,130,246,.1)',true
+    );
+
+    // ── РЯД 2б: 24ч + среднее по часам ─────────────────────
+
+    // 24ч все точки
+    const r24=rows.filter(r=>r.dt>ms24&&okDist(r.dist));
+    const hasSynth24=r24.some(r=>r.synthetic);
+    document.getElementById('gap24').classList.toggle('show',hasSynth24);
     mkLine('c24',
-      r24.map(r=>fmtTime(r.dt)),
-      r24.map(r=>r.dist),
-      '#3b82f6', 'rgba(59,130,246,.1)', true
+      r24.map(r=>({label:fmtTime(r.dt),value:r.dist,synthetic:r.synthetic})),
+      '#8b5cf6','rgba(139,92,246,.1)',true
     );
 
-    const r7 = rows.filter(r => r.dt>ms7 && okDist(r.dist));
-    mkLine('c7d',
-      r7.map(r => {
-        const d=r.dt;
-        return fmtDay(d)+' '+fmtTime(d);
-      }),
-      r7.map(r=>r.dist),
-      '#10b981', 'rgba(16,185,129,.1)', true
-    );
-
-    // ── РЯД 3а: среднее по часам (7д) ───────────────────────
-    const hourBuckets = Array.from({length:24}, (_,h)=>{
-      const pts = rows.filter(r => r.dt>ms7 && r.dt.getHours()===h && okDist(r.dist));
-      return pts.length ? pts.reduce((s,r)=>s+r.dist,0)/pts.length : null;
+    // Среднее по часам суток (7д) — бар
+    const hourBuckets=Array.from({length:24},(_,h)=>{
+      const pts=rawRows.filter(r=>r.dt>ms7&&r.dt.getHours()===h&&okDist(r.dist));
+      return pts.length?pts.reduce((s,r)=>s+r.dist,0)/pts.length:null;
     });
-    const hourLabels = Array.from({length:24}, (_,h)=>String(h).padStart(2,'0')+':00');
-    const hourColors = hourBuckets.map(v => v===null ? 'transparent' : zoneColor(v));
-    mkBar('cByHour', hourLabels, hourBuckets, hourColors);
-
-    // ── РЯД 3б: среднее по дням (30д) ───────────────────────
-    const ms30  = now - 30*86400000;
-    const dayMap = {};
-    rows.filter(r => r.dt>ms30 && okDist(r.dist)).forEach(r=>{
-      const k = fmtDay(r.dt);
-      (dayMap[k] = dayMap[k]||[]).push(r.dist);
-    });
-    const dayLabels = Object.keys(dayMap);
-    const dayVals   = dayLabels.map(k =>
-      +(dayMap[k].reduce((s,x)=>s+x,0)/dayMap[k].length).toFixed(4)
+    mkBar('cByHour',
+      Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00'),
+      hourBuckets,
+      hourBuckets.map(v=>v===null?'transparent':zoneColor(v)),
+      true
     );
-    const dayColors = dayVals.map(v => zoneColor(v));
-    mkBar('cByDay', dayLabels, dayVals, dayColors);
 
-    // ── РЯД 4: температура и влажность ──────────────────────
-    const rTH = rows.filter(r => r.dt>ms24);
-    const lTH = rTH.map(r=>fmtTime(r.dt));
+    // ── РЯД 3: 30д и 7д среднее ─────────────────────────────
 
-    mkLine('cTemp', lTH, rTH.map(r=>r.temp), '#f97316', 'rgba(249,115,22,.1)', false);
-    mkLine('cHum',  lTH, rTH.map(r=>r.hum),  '#06b6d4', 'rgba(6,182,212,.1)',  false);
+    // По дням 30д — бар
+    const dayMap30={};
+    rawRows.filter(r=>r.dt>ms30&&okDist(r.dist)).forEach(r=>{
+      const k=fmtDay(r.dt);
+      (dayMap30[k]=dayMap30[k]||[]).push(r.dist);
+    });
+    const d30labels=Object.keys(dayMap30);
+    const d30vals=d30labels.map(k=>+(dayMap30[k].reduce((s,x)=>s+x,0)/dayMap30[k].length).toFixed(4));
+    mkBar('cByDay',d30labels,d30vals,d30vals.map(v=>zoneColor(v)),true);
 
-  } catch(e) {
+    // По дням 7д — линейный (дублируем среднее, но отдельный график)
+    mkLineSimple('cByDay7',d7labels,d7vals,'#f59e0b','rgba(245,158,11,.12)',true);
+
+    // ── РЯД 4: темп и влажность ─────────────────────────────
+    const rTH=rows.filter(r=>r.dt>ms24);
+    mkLine('cTemp',
+      rTH.map(r=>({label:fmtTime(r.dt),value:r.temp,synthetic:r.synthetic})),
+      '#f97316','rgba(249,115,22,.1)',false
+    );
+    mkLine('cHum',
+      rTH.map(r=>({label:fmtTime(r.dt),value:r.hum,synthetic:r.synthetic})),
+      '#06b6d4','rgba(6,182,212,.1)',false
+    );
+
+  }catch(e){
     showError(e.message);
     console.error(e);
   }
 }
 
 loadData();
-setInterval(loadData, 5*60*1000);
+setInterval(loadData,5*60*1000);
 </script>
 </body>
 </html>
