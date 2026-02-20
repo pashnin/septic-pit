@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Сливная яма — мониторинг</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial; background:#111; color:white; padding:20px }
+.card { background:#1e1e1e; padding:15px; margin:10px 0; border-radius:10px }
+.big { font-size:32px; font-weight:bold }
+canvas { background:#1e1e1e; border-radius:10px; padding:10px }
+</style>
+</head>
+<body>
+
+<h2>Текущие значения</h2>
+<div class="card big" id="levelNow"></div>
+<div class="card" id="avgSameHour"></div>
+<div class="card" id="tempNow"></div>
+<div class="card" id="humNow"></div>
+<div class="card" id="batteryNow"></div>
+
+<h2>Уровень воды — 24 часа</h2>
+<canvas id="level24"></canvas>
+
+<h2>Уровень воды — 7 дней (среднее за сутки)</h2>
+<canvas id="level7"></canvas>
+
+<h2>Температура и влажность — 24 часа</h2>
+<canvas id="climate24"></canvas>
+
+<script>
+
+const url = "https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
+
+fetch(url)
+.then(res => res.text())
+.then(data => {
+
+const rows = data.split("\n").slice(1).map(r => r.split(","));
+const now = new Date();
+const last24 = now - 24*60*60*1000;
+const last7 = now - 7*24*60*60*1000;
+
+let timestamps = [];
+let level = [];
+let temp = [];
+let hum = [];
+let battery = [];
+
+rows.forEach(r => {
+    const t = new Date(r[0]);
+    if (!isNaN(t)) {
+        timestamps.push(t);
+        level.push(Number(r[1]));
+        temp.push(Number(r[2]));
+        hum.push(Number(r[3]));
+        battery.push(Number(r[4]));
+    }
+});
+
+const latestIndex = timestamps.length - 1;
+
+document.getElementById("levelNow").innerHTML =
+"Уровень воды: " + level[latestIndex];
+
+document.getElementById("tempNow").innerHTML =
+"Температура: " + temp[latestIndex];
+
+document.getElementById("humNow").innerHTML =
+"Влажность: " + hum[latestIndex];
+
+document.getElementById("batteryNow").innerHTML =
+"Батарея: " + battery[latestIndex];
+
+
+// === Среднее в тот же час за 7 дней ===
+
+const currentHour = now.getHours();
+let sameHourValues = [];
+
+timestamps.forEach((t,i)=>{
+    if (t > last7 && t.getHours() === currentHour) {
+        sameHourValues.push(level[i]);
+    }
+});
+
+const avgSameHour =
+sameHourValues.reduce((a,b)=>a+b,0) / sameHourValues.length;
+
+document.getElementById("avgSameHour").innerHTML =
+"Средний уровень в это время за 7 дней: " + avgSameHour.toFixed(1);
+
+
+// === 24 часа ===
+
+let labels24 = [];
+let level24 = [];
+let temp24 = [];
+let hum24 = [];
+
+timestamps.forEach((t,i)=>{
+    if (t > last24) {
+        labels24.push(t.getHours()+":00");
+        level24.push(level[i]);
+        temp24.push(temp[i]);
+        hum24.push(hum[i]);
+    }
+});
+
+new Chart(document.getElementById("level24"), {
+type:"line",
+data:{ labels:labels24,
+datasets:[{ label:"Уровень", data:level24 }]
+}
+});
+
+new Chart(document.getElementById("climate24"), {
+type:"line",
+data:{ labels:labels24,
+datasets:[
+{ label:"Температура", data:temp24 },
+{ label:"Влажность", data:hum24 }
+]
+}
+});
+
+
+// === 7 дней среднее за сутки ===
+
+let daily = {};
+
+timestamps.forEach((t,i)=>{
+    if (t > last7) {
+        const d = t.toISOString().split("T")[0];
+        if (!daily[d]) daily[d] = [];
+        daily[d].push(level[i]);
+    }
+});
+
+let labels7 = [];
+let avg7 = [];
+
+for (let d in daily) {
+    labels7.push(d);
+    avg7.push(daily[d].reduce((a,b)=>a+b,0)/daily[d].length);
+}
+
+new Chart(document.getElementById("level7"), {
+type:"line",
+data:{ labels:labels7,
+datasets:[{ label:"Средний уровень", data:avg7 }]
+}
+});
+
+});
+
+</script>
+</body>
+</html>
