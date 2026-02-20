@@ -1,268 +1,753 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Septic Monitor</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сливная яма — монитор</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text2: #64748b;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  body.dark {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #273449;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transition: background 0.3s, color 0.3s;
+    min-height: 100vh;
+  }
 
-:root {
---bg:#f1f5f9;
---card:#ffffff;
---text:#0f172a;
-}
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-icon { font-size: 22px; }
+  .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  #dataAge {
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .theme-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-body.dark {
---bg:#0f172a;
---card:#1e293b;
---text:#e2e8f0;
-}
+  /* ── LAYOUT ── */
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
 
-body {
-margin:0;
-background:var(--bg);
-color:var(--text);
-font-family:system-ui;
-transition:0.3s;
-}
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+    margin: 24px 0 12px;
+  }
 
-.header {
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 20px;
-font-size:20px;
-font-weight:600;
-}
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 
-button {
-padding:6px 12px;
-border-radius:8px;
-border:none;
-cursor:pointer;
-}
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .card-label {
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
 
-.grid {
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-gap:15px;
-padding:20px;
-}
+  /* ── LEVEL BIG CARD ── */
+  .level-card {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+  }
+  .level-visual {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+  .level-visual canvas { position: absolute; top: 0; left: 0; }
+  .level-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .level-num { font-size: 22px; font-weight: 800; line-height: 1; }
+  .level-unit { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .level-info { flex: 1; }
+  .level-info h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .level-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .status-green { background: #dcfce7; color: #15803d; }
+  .status-yellow { background: #fef9c3; color: #a16207; }
+  .status-red { background: #fee2e2; color: #b91c1c; }
+  body.dark .status-green { background: #14532d; color: #86efac; }
+  body.dark .status-yellow { background: #451a03; color: #fcd34d; }
+  body.dark .status-red { background: #450a0a; color: #fca5a5; }
+  .avg-row {
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .avg-row span { font-weight: 600; color: var(--text); }
 
-.card {
-background:var(--card);
-border-radius:16px;
-padding:16px;
-box-shadow:0 4px 20px rgba(0,0,0,0.15);
-text-align:center;
-}
+  /* ── BATTERY GAUGE ── */
+  .bat-card { text-align: center; }
+  .bat-gauge-wrap {
+    position: relative;
+    width: 90px;
+    height: 55px;
+    margin: 8px auto 0;
+  }
+  .bat-gauge-wrap canvas { display: block; }
+  .bat-center {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+  }
 
-.value {
-font-size:26px;
-font-weight:600;
-}
+  /* ── FORECAST ── */
+  .forecast-card { border-left: 3px solid var(--accent); }
+  .forecast-target { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .forecast-val { font-size: 15px; font-weight: 700; }
+  .forecast-method {
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
 
-.small {
-font-size:12px;
-opacity:0.6;
-margin-top:6px;
-}
+  /* ── CHARTS ── */
+  .chart-card { padding: 20px; }
+  .chart-wrap { position: relative; height: 200px; }
 
-.section {
-padding:10px 20px 20px 20px;
-}
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .level-card { grid-column: span 1; flex-direction: column; text-align: center; }
+    .level-info h2 { display: none; }
+    .chart-wrap { height: 160px; }
+    .card-value { font-size: 22px; }
+  }
 
-canvas {
-background:var(--card);
-border-radius:16px;
-padding:10px;
-}
-
-@media(max-width:600px){
-.header { font-size:16px; }
-.value { font-size:22px; }
-}
-
+  /* ── LOADER ── */
+  #loader {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    flex-direction: column; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loader p { color: var(--text2); font-size: 14px; }
 </style>
 </head>
 <body>
 
-<div class="header">
-<div>Сливная яма</div>
-<button onclick="toggleTheme()">Тема</button>
+<div id="loader">
+  <div class="spinner"></div>
+  <p>Загрузка данных…</p>
 </div>
 
-<div class="grid">
-<div class="card">
-<div>Уровень</div>
-<div class="value" id="levelNow"></div>
-<div class="small" id="dataAge"></div>
-</div>
+<header>
+  <div class="header-left">
+    <span class="header-icon">🏠</span>
+    <span class="header-title">Сливная яма</span>
+  </div>
+  <div class="header-right">
+    <span id="dataAge">—</span>
+    <button class="theme-btn" onclick="toggleTheme()">🌙 Тема</button>
+  </div>
+</header>
 
-<div class="card">
-<div>Среднее (этот час 7д)</div>
-<div class="value" id="avgSameHour"></div>
-</div>
+<main id="mainContent" style="display:none">
 
-<div class="card">
-<div>Температура</div>
-<div class="value" id="tempNow"></div>
-</div>
+  <!-- ROW 1: Уровень + Батарея -->
+  <div class="section-title">📊 Текущее состояние</div>
+  <div class="grid-2">
 
-<div class="card">
-<div>Влажность</div>
-<div class="value" id="humNow"></div>
-</div>
+    <div class="card level-card">
+      <div class="level-visual">
+        <canvas id="levelGauge" width="110" height="110"></canvas>
+        <div class="level-center">
+          <div class="level-num" id="levelNum">—</div>
+          <div class="level-unit">метры</div>
+        </div>
+      </div>
+      <div class="level-info">
+        <h2>Уровень воды</h2>
+        <div class="level-status" id="levelStatus">—</div>
+        <div class="avg-row">
+          Среднее в этот час (7д): <span id="avgSameHour">—</span>
+        </div>
+      </div>
+    </div>
 
-<div class="card">
-<div>Батарея</div>
-<canvas id="batGauge" height="140"></canvas>
-</div>
+    <div class="card bat-card">
+      <div class="card-label">🔋 Батарея</div>
+      <div class="bat-gauge-wrap">
+        <canvas id="batGauge" width="90" height="55"></canvas>
+        <div class="bat-center" id="batVal">—</div>
+      </div>
+      <div class="card-sub" id="batStatus">—</div>
+    </div>
 
-<div class="card">
-<div>Прогноз 0.65</div>
-<div class="value" id="forecastHigh"></div>
-</div>
+  </div>
 
-<div class="card">
-<div>Прогноз 0.5</div>
-<div class="value" id="forecastLow"></div>
-</div>
+  <!-- ROW 2: Темп / Влажность / Прогнозы -->
+  <div class="grid-4" style="margin-top:14px">
 
-</div>
+    <div class="card">
+      <div class="card-label">🌡️ Температура</div>
+      <div class="card-value" id="tempNow">—</div>
+      <div class="card-sub">°C в яме</div>
+    </div>
 
-<div class="section">
-<h3>Уровень 24ч</h3>
-<canvas id="level24"></canvas>
-</div>
+    <div class="card">
+      <div class="card-label">💧 Влажность</div>
+      <div class="card-value" id="humNow">—</div>
+      <div class="card-sub">% RH</div>
+    </div>
+
+    <div class="card forecast-card">
+      <div class="card-label">📈 Прогноз → 0.65 м</div>
+      <div class="forecast-target">Достигнет порога «высокий»</div>
+      <div class="forecast-val" id="forecastHigh">—</div>
+    </div>
+
+    <div class="card forecast-card">
+      <div class="card-label">📉 Прогноз → 0.50 м</div>
+      <div class="forecast-target">Достигнет порога «низкий»</div>
+      <div class="forecast-val" id="forecastLow">—</div>
+    </div>
+
+  </div>
+
+  <div class="forecast-method">
+    <strong>Метод прогноза:</strong> суточный профиль за 7 дней — для каждого часа суток вычисляется среднее изменение уровня Δ (м/час).
+    Текущее значение экстраполируется вперёд по этому профилю. Учитывает характерный ритм заполнения ямы.
+  </div>
+
+  <!-- CHARTS -->
+  <div class="section-title">📉 Уровень воды — 24 часа</div>
+  <div class="card chart-card">
+    <div class="chart-wrap"><canvas id="chart24h"></canvas></div>
+  </div>
+
+  <div class="section-title">📆 Средний уровень — 7 дней</div>
+  <div class="card chart-card">
+    <div class="chart-wrap"><canvas id="chart7d"></canvas></div>
+  </div>
+
+  <div class="section-title">🌡️ Температура и влажность — 24 часа</div>
+  <div class="card chart-card">
+    <div class="chart-wrap"><canvas id="chartTH"></canvas></div>
+  </div>
+
+</main>
 
 <script>
-
-const url="https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
-
-function parseDate(d,t){
-const [day,month,year]=d.split(".");
-return new Date(`20${year}-${month}-${day}T${t}`);
+// ─────────────────────────────────────────────
+//  ТЕМА
+// ─────────────────────────────────────────────
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+  const btn = document.querySelector('.theme-btn');
+  btn.textContent = dark ? '☀️ Тема' : '🌙 Тема';
+}
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark');
+  document.querySelector('.theme-btn').textContent = '☀️ Тема';
 }
 
-function toNum(x){ return parseFloat(x.replace(",", ".")); }
+// ─────────────────────────────────────────────
+//  ПАРСИНГ CSV
+// ─────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const header = lines[0];
+  // Определяем разделитель: если есть табы — таб, иначе пробел
+  const sep = header.includes('\t') ? '\t' : /\s+/;
 
-function toggleTheme(){
-document.body.classList.toggle("dark");
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(sep === '\t' ? '\t' : /\s+/);
+    if (parts.length < 6) continue;
+
+    const dateStr = parts[0]; // DD.MM.YY
+    const timeStr = parts[1]; // HH:MM
+    const dist    = toNum(parts[2]);
+    const temp    = toNum(parts[3]);
+    const hum     = toNum(parts[4]);
+    const bat     = toNum(parts[5]);
+
+    if (isNaN(dist) || isNaN(temp) || isNaN(hum) || isNaN(bat)) continue;
+
+    // Парсим дату: DD.MM.YY
+    const [dd, mm, yy] = dateStr.split('.');
+    if (!dd || !mm || !yy) continue;
+    const [hh, mi] = timeStr.split(':');
+    const dt = new Date(2000 + parseInt(yy), parseInt(mm) - 1, parseInt(dd),
+                        parseInt(hh), parseInt(mi));
+    if (isNaN(dt.getTime())) continue;
+
+    rows.push({ dt, dist, temp, hum, bat });
+  }
+
+  // Сортируем по времени
+  rows.sort((a, b) => a.dt - b.dt);
+  return rows;
 }
 
-fetch(url).then(r=>r.text()).then(data=>{
-
-const rows=data.split("\n").slice(1).map(r=>r.split(","));
-
-let ts=[],level=[],temp=[],hum=[],bat=[];
-
-rows.forEach(r=>{
-if(r.length>=6){
-ts.push(parseDate(r[0],r[1]));
-level.push(toNum(r[2]));
-temp.push(toNum(r[3]));
-hum.push(toNum(r[4]));
-bat.push(toNum(r[5]));
+function toNum(s) {
+  if (!s) return NaN;
+  return parseFloat(s.replace(',', '.'));
 }
+
+// ─────────────────────────────────────────────
+//  ФИЛЬТРАЦИЯ АНОМАЛИЙ
+// ─────────────────────────────────────────────
+function isValidDist(d) {
+  // Датчик шлёт -1 или ~0.203-0.204 как ошибочные значения
+  // Реальный диапазон: 0.4 – 1.0 м (грубо)
+  return d >= 0.35 && d <= 1.5;
+}
+
+// ─────────────────────────────────────────────
+//  CHART DEFAULTS
+// ─────────────────────────────────────────────
+function chartDefaults() {
+  const dark = document.body.classList.contains('dark');
+  return {
+    gridColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    textColor: dark ? '#94a3b8' : '#64748b',
+  };
+}
+
+function makeLineChart(id, labels, datasets) {
+  const { gridColor, textColor } = chartDefaults();
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: datasets.length > 1,
+          labels: { color: textColor, font: { size: 12 }, boxWidth: 12 }
+        },
+        tooltip: { callbacks: {} }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, maxTicksLimit: 8, maxRotation: 0 },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  GAUGE — полукруг
+// ─────────────────────────────────────────────
+function drawBatGauge(canvasId, value, min, max) {
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const color = pct > 0.6 ? '#22c55e' : pct > 0.3 ? '#f59e0b' : '#ef4444';
+  const dark = document.body.classList.contains('dark');
+  const bg = dark ? '#334155' : '#e2e8f0';
+
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h - 4;
+  const r = Math.min(cx, cy) - 4;
+
+  // Фон
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, 0);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = bg;
+  ctx.stroke();
+
+  // Значение
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, Math.PI + pct * Math.PI);
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+function drawLevelGauge(value, color) {
+  const canvas = document.getElementById('levelGauge');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const r = 48;
+  const dark = document.body.classList.contains('dark');
+  const bg = dark ? '#334155' : '#e2e8f0';
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = bg;
+  ctx.stroke();
+
+  // Нормализуем: 0.5 = мин, 0.75 = макс (примерный реальный диапазон)
+  const pct = Math.max(0, Math.min(1, (value - 0.4) / (0.75 - 0.4)));
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+// ─────────────────────────────────────────────
+//  ПРОГНОЗ: суточный профиль Δ
+// ─────────────────────────────────────────────
+function buildForecast(rows, currentLevel, currentDt) {
+  // Для каждого часа суток — среднее изменение уровня за час
+  const deltas = Array.from({ length: 24 }, () => []);
+  const valid = rows.filter(r => isValidDist(r.dist));
+
+  for (let i = 1; i < valid.length; i++) {
+    const prev = valid[i - 1];
+    const cur  = valid[i];
+    const dtMs = cur.dt - prev.dt;
+    // Только смежные точки (не более 2ч разрыв)
+    if (dtMs <= 0 || dtMs > 2 * 3600 * 1000) continue;
+    const dtH = dtMs / 3600000;
+    const delta = (cur.dist - prev.dist) / dtH; // м/час
+    const hour  = cur.dt.getHours();
+    deltas[hour].push(delta);
+  }
+
+  // Средний дельта по каждому часу
+  const avgDelta = deltas.map(arr => {
+    if (arr.length === 0) return 0;
+    return arr.reduce((s, x) => s + x, 0) / arr.length;
+  });
+
+  // Экстраполяция вперёд
+  function foreachTarget(target) {
+    let level = currentLevel;
+    let dt = new Date(currentDt);
+    const maxHours = 7 * 24;
+
+    for (let h = 0; h < maxHours; h++) {
+      const hour = dt.getHours();
+      const d = avgDelta[hour];
+      level += d; // за 1 час
+      dt = new Date(dt.getTime() + 3600000);
+
+      const reached = target > currentLevel ? level >= target : level <= target;
+      if (reached) {
+        return dt.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      }
+    }
+    return 'не ожидается в ближ. 7д';
+  }
+
+  return {
+    high: foreachTarget(0.65),
+    low:  foreachTarget(0.50),
+  };
+}
+
+// ─────────────────────────────────────────────
+//  ВОЗРАСТ ДАННЫХ
+// ─────────────────────────────────────────────
+function formatAge(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 60) return `обновлено ${m} мин назад`;
+  const h = Math.round(m / 60);
+  return `обновлено ${h} ч назад`;
+}
+
+// ─────────────────────────────────────────────
+//  MAIN
+// ─────────────────────────────────────────────
+const SHEET_ID = '1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ';
+const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+
+let charts = {};
+
+async function loadData() {
+  const res  = await fetch(CSV_URL);
+  const text = await res.text();
+  const rows = parseCSV(text);
+
+  if (rows.length === 0) {
+    document.getElementById('loader').innerHTML = '<p style="color:red">Ошибка: данные не получены</p>';
+    return;
+  }
+
+  const now   = new Date();
+  const last  = rows[rows.length - 1];
+
+  // Скрываем лоадер
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+
+  // ── Возраст данных ──
+  document.getElementById('dataAge').textContent = formatAge(now - last.dt);
+
+  // ── Текущие показатели ──
+  document.getElementById('tempNow').textContent = last.temp.toFixed(1) + ' °C';
+  document.getElementById('humNow').textContent  = last.hum.toFixed(1)  + ' %';
+
+  // Ищем последний валидный dist
+  let lastValid = null;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (isValidDist(rows[i].dist)) { lastValid = rows[i]; break; }
+  }
+
+  // ── Уровень ──
+  if (lastValid) {
+    const lv = lastValid.dist;
+    document.getElementById('levelNum').textContent = lv.toFixed(3);
+
+    let color, statusClass, statusText;
+    if (lv > 0.65) {
+      color = '#22c55e'; statusClass = 'status-green'; statusText = '🟢 Высокий';
+    } else if (lv >= 0.50) {
+      color = '#f59e0b'; statusClass = 'status-yellow'; statusText = '🟡 Средний';
+    } else {
+      color = '#ef4444'; statusClass = 'status-red'; statusText = '🔴 Низкий';
+    }
+
+    const statusEl = document.getElementById('levelStatus');
+    statusEl.textContent    = statusText;
+    statusEl.className      = 'level-status ' + statusClass;
+
+    drawLevelGauge(lv, color);
+
+    // Среднее в этот час за 7 дней
+    const h7ago = new Date(now - 7 * 86400000);
+    const hourNow = now.getHours();
+    const sameHour = rows.filter(r =>
+      r.dt > h7ago &&
+      r.dt.getHours() === hourNow &&
+      isValidDist(r.dist)
+    );
+    if (sameHour.length) {
+      const avg = sameHour.reduce((s, r) => s + r.dist, 0) / sameHour.length;
+      document.getElementById('avgSameHour').textContent = avg.toFixed(3) + ' м';
+    } else {
+      document.getElementById('avgSameHour').textContent = 'нет данных';
+    }
+
+    // Прогноз
+    const fc = buildForecast(rows, lv, lastValid.dt);
+    document.getElementById('forecastHigh').textContent = lv >= 0.65 ? 'уже достигнут' : fc.high;
+    document.getElementById('forecastLow').textContent  = lv <= 0.50 ? 'уже достигнут' : fc.low;
+  }
+
+  // ── Батарея ──
+  const batV = last.bat;
+  const BAT_MIN = 3.1, BAT_MAX = 4.1;
+  const batPct = Math.round(Math.max(0, Math.min(1, (batV - BAT_MIN) / (BAT_MAX - BAT_MIN))) * 100);
+  document.getElementById('batVal').textContent = batV.toFixed(2) + ' В';
+  document.getElementById('batStatus').textContent = batPct + '% заряда';
+  drawBatGauge('batGauge', batV, BAT_MIN, BAT_MAX);
+
+  // ── График 24ч ──
+  const ms24 = now - 24 * 3600000;
+  const rows24 = rows.filter(r => r.dt > ms24 && isValidDist(r.dist));
+  const lbl24  = rows24.map(r => `${r.dt.getHours().toString().padStart(2,'0')}:${r.dt.getMinutes().toString().padStart(2,'0')}`);
+  const dat24  = rows24.map(r => r.dist);
+
+  if (charts.c24) charts.c24.destroy();
+  charts.c24 = makeLineChart('chart24h', lbl24, [{
+    label: 'Уровень (м)',
+    data: dat24,
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.1)',
+    fill: true,
+    tension: 0.3,
+    pointRadius: 3,
+    pointHoverRadius: 5,
+  }]);
+
+  // ── График 7 дней (средний за сутки) ──
+  const ms7 = now - 7 * 86400000;
+  const byDay = {};
+  rows.filter(r => r.dt > ms7 && isValidDist(r.dist)).forEach(r => {
+    const key = `${r.dt.getDate().toString().padStart(2,'0')}.${(r.dt.getMonth()+1).toString().padStart(2,'0')}`;
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(r.dist);
+  });
+  const lbl7 = Object.keys(byDay);
+  const dat7 = lbl7.map(k => +(byDay[k].reduce((s,x)=>s+x,0)/byDay[k].length).toFixed(4));
+
+  if (charts.c7) charts.c7.destroy();
+  charts.c7 = makeLineChart('chart7d', lbl7, [{
+    label: 'Средний уровень (м)',
+    data: dat7,
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    fill: true,
+    tension: 0.3,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+  }]);
+
+  // ── График темп + влажность 24ч ──
+  const rowsTH = rows.filter(r => r.dt > ms24);
+  const lblTH  = rowsTH.map(r => `${r.dt.getHours().toString().padStart(2,'0')}:${r.dt.getMinutes().toString().padStart(2,'0')}`);
+
+  if (charts.cTH) charts.cTH.destroy();
+  charts.cTH = makeLineChart('chartTH', lblTH, [
+    {
+      label: 'Температура (°C)',
+      data: rowsTH.map(r => r.temp),
+      borderColor: '#f97316',
+      backgroundColor: 'rgba(249,115,22,0.08)',
+      fill: false,
+      tension: 0.3,
+      pointRadius: 2,
+      yAxisID: 'yT',
+    },
+    {
+      label: 'Влажность (%)',
+      data: rowsTH.map(r => r.hum),
+      borderColor: '#06b6d4',
+      backgroundColor: 'rgba(6,182,212,0.08)',
+      fill: false,
+      tension: 0.3,
+      pointRadius: 2,
+      yAxisID: 'yH',
+    }
+  ]);
+
+  // Добавляем вторую ось к графику TH
+  charts.cTH.options.scales = {
+    ...charts.cTH.options.scales,
+    yT: {
+      type: 'linear', position: 'left',
+      ticks: { color: '#f97316' },
+      grid: { color: chartDefaults().gridColor }
+    },
+    yH: {
+      type: 'linear', position: 'right',
+      ticks: { color: '#06b6d4' },
+      grid: { drawOnChartArea: false }
+    },
+    x: charts.cTH.options.scales.x,
+  };
+  delete charts.cTH.options.scales.y;
+  charts.cTH.update();
+}
+
+// Запуск + автообновление каждые 5 минут
+loadData().catch(e => {
+  document.getElementById('loader').innerHTML = `<p style="color:red">Ошибка загрузки: ${e.message}</p>`;
 });
-
-const last=ts.length-1;
-const now=new Date();
-
-document.getElementById("levelNow").innerHTML=level[last].toFixed(3)+" м";
-document.getElementById("tempNow").innerHTML=temp[last].toFixed(1)+" °C";
-document.getElementById("humNow").innerHTML=hum[last].toFixed(1)+" %";
-
-const diffMin=Math.round((now-ts[last])/60000);
-document.getElementById("dataAge").innerHTML="обновлено "+diffMin+" мин назад";
-
-// цвет уровня
-const lvlCard=document.getElementById("levelNow");
-if(level[last]>0.65) lvlCard.style.color="green";
-else if(level[last]>0.5) lvlCard.style.color="orange";
-else lvlCard.style.color="red";
-
-// среднее 7 дней
-const last7=now-7*24*3600000;
-let sameHour=[],hourNow=now.getHours();
-
-ts.forEach((t,i)=>{
-if(t>last7 && t.getHours()===hourNow)
-sameHour.push(level[i]);
-});
-const avg=sameHour.reduce((a,b)=>a+b,0)/sameHour.length;
-document.getElementById("avgSameHour").innerHTML=avg.toFixed(3)+" м";
-
-// gauge батареи
-new Chart(document.getElementById("batGauge"),{
-type:"doughnut",
-data:{
-datasets:[{
-data:[bat[last]-3.1,4.1-bat[last]],
-backgroundColor:["#22c55e","#e5e7eb"]
-}]
-},
-options:{
-rotation:-90,
-circumference:180,
-plugins:{legend:{display:false}},
-cutout:"70%"
-}
-});
-
-// 24ч график
-let labels=[],data24=[];
-const last24=now-24*3600000;
-
-ts.forEach((t,i)=>{
-if(t>last24){
-labels.push(t.getHours()+":00");
-data24.push(level[i]);
-}
-});
-
-new Chart(document.getElementById("level24"),{
-type:"line",
-data:{labels:labels,datasets:[{
-data:data24,
-borderColor:"#3b82f6",
-tension:0.3
-}]}
-});
-
-// ===== прогноз =====
-let X=[],Y=[];
-ts.forEach((t,i)=>{
-if(t>last7){
-X.push(t.getTime());
-Y.push(level[i]);
-}
-});
-
-const n=X.length;
-let sumX=0,sumY=0,sumXY=0,sumXX=0;
-for(let i=0;i<n;i++){
-sumX+=X[i];
-sumY+=Y[i];
-sumXY+=X[i]*Y[i];
-sumXX+=X[i]*X[i];
-}
-
-const a=(n*sumXY-sumX*sumY)/(n*sumXX-sumX*sumX);
-const b=(sumY-a*sumX)/n;
-
-function predict(target){
-if(a<=0) return "нет роста";
-const time=(target-b)/a;
-return new Date(time).toLocaleString();
-}
-
-document.getElementById("forecastHigh").innerHTML=predict(0.65);
-document.getElementById("forecastLow").innerHTML=predict(0.5);
-
-});
-
+setInterval(loadData, 5 * 60 * 1000);
 </script>
 </body>
 </html>
