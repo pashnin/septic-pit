@@ -2,7 +2,7 @@ name: Update data.csv
 
 on:
   schedule:
-    - cron: '03 * * * *'   # каждый час в :03 минут
+    - cron: '3 */4 * * *'   
   workflow_dispatch:         # + кнопка ручного запуска
 
 jobs:
