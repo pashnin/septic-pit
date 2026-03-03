@@ -1,273 +1,604 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Septic Pit</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 20px; line-height: 1.4; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; }
-    .muted { opacity: 0.75; }
-    .card { border: 1px solid rgba(0,0,0,0.12); border-radius: 12px; padding: 12px 14px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: left; }
-    th { position: sticky; top: 0; background: #fff; }
-    .btn { padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.2); background: #fff; cursor: pointer; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .error { color: #b00020; white-space: pre-wrap; }
-    .ok { color: #1b5e20; }
-    .nowrap { white-space: nowrap; }
-    @media (prefers-color-scheme: dark) {
-      body { background: #0b0b0f; color: #e8e8ee; }
-      .card { border-color: rgba(255,255,255,0.12); }
-      th { background: #0b0b0f; }
-      th, td { border-bottom-color: rgba(255,255,255,0.10); }
-      .btn { background: #12121a; color: #e8e8ee; border-color: rgba(255,255,255,0.18); }
-      .muted { opacity: 0.78; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Проект «Венера»</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;
+  --border:#e2e8f0;--text:#1e293b;--text2:#64748b;
+  --accent:#3b82f6;--shadow:0 2px 12px rgba(0,0,0,.08);
+}
+body.dark{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#273449;
+  --border:#334155;--text:#f1f5f9;--text2:#94a3b8;
+  --shadow:0 2px 16px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:background .3s,color .3s;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.h-left{font-size:17px;font-weight:700}
+.h-right{display:flex;align-items:center;gap:8px}
+#dataAge{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;transition:.3s}
+#dataAge.stale{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+body.dark #dataAge.stale{background:#450a0a;color:#fca5a5;border-color:#7f1d1d}
+#gapWarn{display:none;font-size:12px;font-weight:600;background:#fef9c3;color:#a16207;border:1px solid #fde68a;padding:4px 10px;border-radius:20px}
+body.dark #gapWarn{background:#451a03;color:#fcd34d;border-color:#78350f}
+#gapWarn.show{display:block}
+.btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec-time{font-size:12px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:2px 10px;border-radius:20px;text-transform:none;letter-spacing:0}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);transition:background .3s}
+.lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.val{font-size:30px;font-weight:800;line-height:1}
+.sub{font-size:12px;color:var(--text2);margin-top:5px}
+.thermo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px auto 8px}
+.thermo-ticks{display:flex;flex-direction:column;justify-content:space-between;height:160px;padding:6px 0}
+.thermo-ticks span{font-size:10px;color:var(--text2);line-height:1;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;margin:6px 0 4px}
+.sg{background:#dcfce7;color:#15803d} body.dark .sg{background:#14532d;color:#86efac}
+.sy{background:#fef9c3;color:#a16207} body.dark .sy{background:#451a03;color:#fcd34d}
+.sr{background:#fee2e2;color:#b91c1c} body.dark .sr{background:#450a0a;color:#fca5a5}
+.fc-mini{font-size:11px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border);padding-top:8px;margin-top:6px}
+.fc-mini b{color:var(--text)}
+.avg-mini{font-size:11px;color:var(--text2);margin-bottom:4px}
+.avg-mini b{color:var(--text)}
+.bat-wrap{position:relative;width:90px;height:55px;margin:8px auto 4px}
+.bat-num{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap}
+.hum-alert{display:none;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;margin-top:8px;text-align:center;line-height:1.4}
+body.dark .hum-alert{background:#450a0a;color:#fca5a5}
+.hum-alert.show{display:block}
+.chart-card{padding:18px;position:relative}
+.gap-badge{display:none;position:absolute;top:12px;right:14px;font-size:10px;font-weight:600;background:#fef9c3;color:#a16207;border:1px solid #fde68a;padding:2px 8px;border-radius:20px;z-index:2}
+body.dark .gap-badge{background:#451a03;color:#fcd34d;border-color:#78350f}
+.gap-badge.show{display:block}
+.chart-wrap{position:relative;height:210px}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)}
+#errBox{display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:12px;padding:14px 18px;margin:20px 0;font-size:14px;line-height:1.6}
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px}
+.spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#loader p{color:var(--text2);font-size:14px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.g2{grid-template-columns:1fr}.chart-wrap{height:160px}}
+</style>
 </head>
 <body>
-  <div class="row">
-    <h1 style="margin:0;">Septic Pit</h1>
-    <span id="status" class="muted"></span>
-  </div>
 
-  <div class="row" style="margin-top: 10px;">
-    <button id="reloadBtn" class="btn">Обновить</button>
-    <span id="freshness" class="muted"></span>
-  </div>
+<div id="loader"><div class="spin"></div><p>Загрузка данных…</p></div>
+<div id="errBox"></div>
 
-  <div id="meta" class="card" style="margin-top: 12px;">
-    <div class="row">
-      <div><b>Источник:</b> <span id="sourceLabel" class="muted"></span></div>
+<header>
+  <div class="h-left">🏠 Проект «Венера»</div>
+  <div class="h-right">
+    <span id="gapWarn">⚠️ есть пропуски</span>
+    <span id="dataAge">—</span>
+    <button class="btn" onclick="toggleTheme()">🌙 Тема</button>
+  </div>
+</header>
+
+<main id="app" style="display:none">
+
+  <div class="sec">📊 Текущее состояние <span class="sec-time" id="secTime">—</span></div>
+  <div class="g4">
+    <div class="card" style="text-align:center">
+      <div class="lbl">📏 Уровень воды</div>
+      <div class="thermo-wrap">
+        <canvas id="thermoCanvas" width="36" height="172"></canvas>
+        <div class="thermo-ticks">
+          <span>0</span><span>−0.2</span><span>−0.4</span>
+          <span>−0.6</span><span>−0.8</span><span>−0.95</span>
+        </div>
+      </div>
+      <div class="badge" id="lvBadge">—</div>
+      <div style="font-size:22px;font-weight:800;line-height:1;margin-bottom:4px" id="lvNum">—</div>
+      <div style="font-size:11px;color:var(--text2)">метры</div>
+      <div class="avg-mini" style="margin-top:8px">Ср. час (7д): <b id="avgHour">—</b></div>
+      <div class="fc-mini">
+        ↑ до −0.50 м: <b id="fc50">—</b><br>
+        ↓ до −0.65 м: <b id="fc65">—</b>
+      </div>
     </div>
-    <div id="errorBox" class="error" style="margin-top: 8px; display:none;"></div>
-  </div>
-
-  <div id="tableWrap" class="card" style="margin-top: 12px;">
-    <div class="muted">Данные:</div>
-    <div style="overflow:auto; max-height: 70vh;">
-      <table id="tbl"></table>
+    <div class="card" style="text-align:center">
+      <div class="lbl">🔋 Батарея</div>
+      <div class="bat-wrap">
+        <canvas id="batGauge" width="90" height="55"></canvas>
+        <div class="bat-num" id="batNum">—</div>
+      </div>
+      <div class="sub" id="batSub">—</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="lbl">🌡️ Температура</div>
+      <div class="val" id="tempVal" style="margin-top:32px">—</div>
+      <div class="sub">°C в яме</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="lbl">💧 Влажность</div>
+      <div class="val" id="humVal" style="margin-top:32px">—</div>
+      <div class="sub">% RH</div>
+      <div class="hum-alert" id="humAlert">—</div>
     </div>
   </div>
+
+  <div class="sec">📉 Уровень воды</div>
+  <div class="g2">
+    <div class="card chart-card">
+      <div class="chart-title">24 часа</div>
+      <span class="gap-badge" id="gap24">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c24"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">Среднее за час — 7 дней</div>
+      <div class="chart-wrap"><canvas id="cByHour"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sec">📆 Средние за день</div>
+  <div class="g2">
+    <div class="card chart-card">
+      <div class="chart-title">Среднее за день — 7 дней</div>
+      <span class="gap-badge" id="gap7avg">〰 дублированные данные</span>
+      <div class="chart-wrap"><canvas id="c7avg"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">Среднее за день — 30 дней</div>
+      <div class="chart-wrap"><canvas id="c30avg"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sec">🌡️ Температура и влажность — 24 часа</div>
+  <div class="g2">
+    <div class="card chart-card">
+      <div class="chart-title">Температура (°C)</div>
+      <div class="chart-wrap"><canvas id="cTemp"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">Влажность (%)</div>
+      <div class="chart-wrap"><canvas id="cHum"></canvas></div>
+    </div>
+  </div>
+
+</main>
 
 <script>
-(() => {
-  // 1) Основной источник CSV (Google Sheets export)
-  const SHEET_CSV_URL =
-    "https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
+// ── ТЕМА ─────────────────────────────────────────────────────
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('theme',d?'dark':'light');
+  document.querySelector('.btn').textContent=d?'☀️ Тема':'🌙 Тема';
+}
+if(localStorage.getItem('theme')==='dark'){
+  document.body.classList.add('dark');
+  document.querySelector('.btn').textContent='☀️ Тема';
+}
 
-  // 2) Fallback (опционально): можно указать raw GitHub или твой хостинг
-  // Например:
-  // const FALLBACK_CSV_URL = "https://raw.githubusercontent.com/<user>/<repo>/main/data.csv";
-  const FALLBACK_CSV_URL = "";
+// ── ИСТОЧНИК CSV (Google Sheets) + кеш ────────────────────────
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1iwjEdSiXEiLN6kiji0PIn24oQN2F-iC1ohLq_dMh7iQ/export?format=csv";
+const CSV_CACHE_KEY = "venus_csv_cache_v1";
+const CSV_CACHE_TTL = 5*60*1000; // 5 минут
 
-  // Кеш в localStorage
-  const CACHE_KEY = "septic_csv_cache_v1";
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 минут
+async function fetchCSV(){
+  // 1) пробуем кеш
+  try{
+    const raw=localStorage.getItem(CSV_CACHE_KEY);
+    if(raw){
+      const c=JSON.parse(raw);
+      if(c && c.t && c.text && (Date.now()-c.t)<CSV_CACHE_TTL){
+        return c.text;
+      }
+    }
+  }catch(_){}
 
-  const els = {
-    status: document.getElementById("status"),
-    freshness: document.getElementById("freshness"),
-    sourceLabel: document.getElementById("sourceLabel"),
-    errorBox: document.getElementById("errorBox"),
-    reloadBtn: document.getElementById("reloadBtn"),
-    tbl: document.getElementById("tbl"),
+  // 2) грузим с Google
+  const res=await fetch(SHEET_CSV_URL, { cache:'no-store' });
+  if(!res.ok)throw new Error(`CSV не доступен (HTTP ${res.status})`);
+  const text=await res.text();
+  if(!text.trim())throw new Error('CSV пустой');
+
+  // 3) сохраняем кеш
+  try{ localStorage.setItem(CSV_CACHE_KEY, JSON.stringify({t:Date.now(), text})); }catch(_){}
+  return text;
+}
+
+// ── CSV парсер (как было) ─────────────────────────────────────
+function parseLine(line){
+  const f=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"')inQ=!inQ;
+    else if(c===','&&!inQ){f.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  f.push(cur.trim());return f;
+}
+function toNum(s){return parseFloat((s||'').replace(/"/g,'').replace(',','.'));}
+function parseCSV(text){
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+                  .split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)return[];
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const p=parseLine(lines[i]);
+    if(p.length<6)continue;
+    const dp=p[0].split('.');
+    if(dp.length<3)continue;
+    const yr=parseInt(dp[2],10)<100?2000+parseInt(dp[2],10):parseInt(dp[2],10);
+    const tp=p[1].split(':');
+    const dt=new Date(yr,parseInt(dp[1],10)-1,parseInt(dp[0],10),parseInt(tp[0],10),parseInt(tp[1]||'0',10));
+    if(isNaN(dt.getTime()))continue;
+    const dist=toNum(p[2]),temp=toNum(p[3]),hum=toNum(p[4]),bat=toNum(p[5]);
+    if([dist,temp,hum,bat].some(isNaN))continue;
+    rows.push({dt,dist,temp,hum,bat,synthetic:false});
+  }
+  rows.sort((a,b)=>a.dt-b.dt);
+  return rows;
+}
+
+function okDist(d){return d<-0.2&&d>-1.5&&Math.abs(d+1.0)>0.01;}
+
+function gapFill(rows,maxGapHours=48){
+  const STEP=3600000,maxMs=maxGapHours*STEP;
+  const out=[];let hadGap=false;
+  for(let i=0;i<rows.length;i++){
+    const cur=rows[i];
+    if(i>0){
+      const prev=rows[i-1],diff=cur.dt-prev.dt;
+      if(diff>90*60*1000&&diff<=maxMs){
+        hadGap=true;
+        let fd=okDist(prev.dist)?prev.dist:null;
+        if(fd===null)for(let j=out.length-1;j>=0;j--){if(okDist(out[j].dist)){fd=out[j].dist;break;}}
+        if(fd!==null){
+          let t=new Date(prev.dt.getTime()+STEP);
+          while(t<cur.dt-30*60*1000){
+            out.push({dt:new Date(t),dist:fd,temp:prev.temp,hum:prev.hum,bat:prev.bat,synthetic:true});
+            t=new Date(t.getTime()+STEP);
+          }
+        }
+      }else if(diff>maxMs)hadGap=true;
+    }
+    out.push(cur);
+  }
+  return{rows:out,hadGap};
+}
+
+function levelStatus(d){
+  if(d>-0.5) return{color:'#ef4444',cls:'sr',label:'🔴 Высокий'};
+  if(d>=-0.65)return{color:'#f59e0b',cls:'sy',label:'🟡 Средний'};
+  return           {color:'#22c55e',cls:'sg',label:'🟢 Низкий'};
+}
+
+// Цвет столба по значению
+function zoneColor(v){
+  if(v===null||v===undefined)return'transparent';
+  if(v>-0.5) return'rgba(239,68,68,.85)';
+  if(v>=-0.65)return'rgba(245,158,11,.85)';
+  return          'rgba(34,197,94,.85)';
+}
+
+// ── Динамический min оси ──────────────────────────────────────
+// Не выше -1.0, но если есть данные ниже — расширяем + отступ 0.05
+function dynMin(values){
+  const validVals=values.filter(v=>v!==null&&v!==undefined);
+  const dataMin=validVals.length?Math.min(...validVals):0;
+  return Math.min(-1.0, dataMin - 0.05);
+}
+
+// ── ТЕРМОМЕТР ────────────────────────────────────────────────
+function drawThermo(value){
+  const cv=document.getElementById('thermoCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const dark=document.body.classList.contains('dark');
+  const trackBg=dark?'#334155':'#e2e8f0';
+  const borderC=dark?'#475569':'#cbd5e1';
+  const R=10,tw=22,tx=(W-tw)/2,ty=6,th=H-12;
+  const MIN=-0.95,MAX=0;
+  function valToY(v){return ty+th-((v-MIN)/(MAX-MIN))*th;}
+  ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.fillStyle=trackBg;ctx.fill();
+  function fillZone(yTop,yBot,color){
+    const cTop=Math.max(yTop,ty),cBot=Math.min(yBot,ty+th);
+    if(cBot<=cTop)return;
+    ctx.save();ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
+    ctx.fillStyle=color;ctx.fillRect(tx,cTop,tw,cBot-cTop);ctx.restore();
+  }
+  fillZone(valToY(-0.65),valToY(-0.95),'#22c55e');
+  fillZone(valToY(-0.50),valToY(-0.65),'#f59e0b');
+  fillZone(valToY(0),    valToY(-0.50),'#ef4444');
+  if(value!==null&&okDist(value)){
+    const yVal=valToY(Math.max(MIN,Math.min(MAX,value)));
+    ctx.save();ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.clip();
+    ctx.fillStyle=trackBg;ctx.fillRect(tx,ty,tw,yVal-ty);ctx.restore();
+    const ax=tx+tw+3,ay=yVal,ac=levelStatus(value).color;
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+7,ay-5);ctx.lineTo(ax+7,ay+5);
+    ctx.closePath();ctx.fillStyle=ac;ctx.fill();
+  }
+  ctx.beginPath();ctx.roundRect(tx,ty,tw,th,R);ctx.strokeStyle=borderC;ctx.lineWidth=1.5;ctx.stroke();
+  [-0.50,-0.65].forEach(v=>{
+    const y=valToY(v);
+    ctx.beginPath();ctx.moveTo(tx,y);ctx.lineTo(tx+tw,y);
+    ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1;ctx.stroke();
+  });
+}
+
+// ── БАТАРЕЯ ──────────────────────────────────────────────────
+function drawBat(pct,color){
+  const dark=document.body.classList.contains('dark');
+  const cv=document.getElementById('batGauge'),ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=cv.width/2,cy=cv.height-4,r=cx-6;
+  ctx.lineWidth=9;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,0);
+  ctx.strokeStyle=dark?'#334155':'#e2e8f0';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+pct*Math.PI);
+  ctx.strokeStyle=color;ctx.stroke();
+}
+
+// ── ГРАФИКИ ──────────────────────────────────────────────────
+const CH={};
+function gc(){return document.body.classList.contains('dark')?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';}
+function tc(){return document.body.classList.contains('dark')?'#94a3b8':'#64748b';}
+function xSc(){return{ticks:{color:tc(),maxTicksLimit:8,maxRotation:0},grid:{color:gc()}};}
+
+// Ось Y для уровня — динамический min, max всегда 0
+function yLvSc(minVal){
+  return{
+    min:minVal, max:0,
+    ticks:{color:tc(),callback:v=>v.toFixed(2)},
+    grid:{color:gc()}
   };
+}
+function yNormSc(){return{ticks:{color:tc()},grid:{color:gc()}};}
 
-  function setStatus(text, ok=true) {
-    els.status.textContent = text || "";
-    els.status.className = ok ? "ok" : "error";
-  }
+// ── Универсальный бар-график уровня ──────────────────────────
+function mkBarLevel(id,labels,values,synthFlags){
+  if(CH[id])CH[id].destroy();
 
-  function showError(err) {
-    els.errorBox.style.display = "block";
-    els.errorBox.textContent = String(err || "Unknown error");
-  }
+  const minVal=dynMin(values);
+  const colors=values.map((v,i)=>{
+    if(v===null)return'transparent';
+    if(synthFlags&&synthFlags[i])return'rgba(168,85,247,.5)';
+    return zoneColor(v);
+  });
 
-  function clearError() {
-    els.errorBox.style.display = "none";
-    els.errorBox.textContent = "";
-  }
+  const lineLen=labels.length;
+  const line50=new Array(lineLen).fill(-0.50);
+  const line65=new Array(lineLen).fill(-0.65);
 
-  function nowLabel() {
-    const d = new Date();
-    return d.toLocaleString("ru-RU", { hour12: false });
-  }
-
-  function parseCsv(text) {
-    // Минималистичный CSV parser:
-    // - поддержка кавычек
-    // - разделитель авто: ';' если он встречается чаще, иначе ','
-    const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter(l => l.trim().length);
-    if (!lines.length) return [];
-
-    const delim = (lines[0].split(";").length > lines[0].split(",").length) ? ";" : ",";
-
-    const rows = [];
-    for (const line of lines) {
-      const row = [];
-      let cur = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-
-        if (ch === '"') {
-          // двойные кавычки внутри кавычек
-          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-          else inQuotes = !inQuotes;
-          continue;
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {
+          type:'bar',
+          data:values,
+          backgroundColor:colors,
+          borderRadius:2,
+          barPercentage:.9,
+          categoryPercentage:.85,
+          base:minVal,
+          order:1
+        },
+        {
+          type:'line',
+          data:line50,
+          borderColor:'rgba(239,68,68,.6)',
+          borderWidth:1.5,
+          borderDash:[5,4],
+          pointRadius:0,
+          fill:false,
+          order:0,
+          tension:0
+        },
+        {
+          type:'line',
+          data:line65,
+          borderColor:'rgba(245,158,11,.6)',
+          borderWidth:1.5,
+          borderDash:[5,4],
+          pointRadius:0,
+          fill:false,
+          order:0,
+          tension:0
         }
-
-        if (!inQuotes && ch === delim) {
-          row.push(cur);
-          cur = "";
-          continue;
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          filter:item=>item.datasetIndex===0,
+          callbacks:{label:ctx=>{
+            const v=ctx.parsed.y;
+            if(v===null||v===undefined)return'';
+            const syn=synthFlags&&synthFlags[ctx.dataIndex]?' (дубль)':'';
+            return` ${v.toFixed(3)}${syn}`;
+          }}
         }
-
-        cur += ch;
+      },
+      scales:{
+        x:xSc(),
+        y:yLvSc(minVal)
       }
-      row.push(cur);
-
-      // trim ячеек
-      rows.push(row.map(c => c.trim()));
     }
-    return rows;
-  }
+  });
+}
 
-  function normalizeValue(v) {
-    // Приводим "0,676" -> 0.676 (только если это похоже на число)
-    if (typeof v !== "string") return v;
-    const s = v.trim();
-    if (/^-?\d+,\d+$/.test(s)) return Number(s.replace(",", "."));
-    if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
-    return s;
-  }
+// Линейный (температура / влажность)
+function mkLine(id,pts,color,fillColor){
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'line',
+    data:{
+      labels:pts.map(p=>p.label),
+      datasets:[{
+        data:pts.map(p=>p.value),
+        borderColor:color,backgroundColor:fillColor,
+        fill:true,tension:.35,
+        pointRadius:pts.length>150?0:pts.length>50?1:3,
+        pointHoverRadius:5
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}`}}},
+      scales:{x:xSc(),y:yNormSc()}
+    }
+  });
+}
 
-  function renderTable(rows) {
-    els.tbl.innerHTML = "";
-    if (!rows || !rows.length) {
-      els.tbl.innerHTML = "<tr><td class='muted'>Пусто</td></tr>";
-      return;
+// ── ПРОГНОЗ ──────────────────────────────────────────────────
+function buildForecast(rawRows,lv,lvDt){
+  const valid=rawRows.filter(r=>okDist(r.dist));
+  const deltas=Array.from({length:24},()=>[]);
+  for(let i=1;i<valid.length;i++){
+    const a=valid[i-1],b=valid[i],ms=b.dt-a.dt;
+    if(ms<=0||ms>2*3600000)continue;
+    deltas[b.dt.getHours()].push((b.dist-a.dist)/(ms/3600000));
+  }
+  const avg=deltas.map(arr=>arr.length?arr.reduce((s,x)=>s+x,0)/arr.length:0);
+  function reach(target,goUp){
+    let v=lv,dt=new Date(lvDt);
+    for(let h=0;h<7*24;h++){
+      v+=avg[dt.getHours()];dt=new Date(dt.getTime()+3600000);
+      if(goUp?v>=target:v<=target)
+        return dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }
+    return'не ожидается (7д)';
+  }
+  return{high:reach(-0.50,true),low:reach(-0.65,false)};
+}
+
+function fmtAge(ms){const m=Math.round(ms/60000);return m<60?`обновлено ${m} мин назад`:`обновлено ${Math.round(m/60)} ч назад`;}
+function fmtTime(dt){return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
+function fmtDay(dt){return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');}
+function showError(msg){
+  document.getElementById('loader').style.display='none';
+  const b=document.getElementById('errBox');b.style.display='block';b.innerHTML='⚠️ '+msg;
+}
+
+// ── MAIN ─────────────────────────────────────────────────────
+async function loadData(){
+  try{
+    // вместо ./data.csv — Google Sheets
+    const text = await fetchCSV();
+
+    const rawRows=parseCSV(text);
+    if(!rawRows.length)throw new Error('Не удалось разобрать CSV.');
+
+    const{rows,hadGap}=gapFill(rawRows,48);
+    document.getElementById('loader').style.display='none';
+    document.getElementById('app').style.display='block';
+
+    const now=new Date();
+    const lastReal=rawRows[rawRows.length-1];
+
+    const ageMs=now-lastReal.dt;
+    const ageEl=document.getElementById('dataAge');
+    ageEl.textContent=fmtAge(ageMs);
+    ageEl.className=ageMs>2*3600000?'stale':'';
+    document.getElementById('gapWarn').classList.toggle('show',hadGap);
+    document.getElementById('secTime').textContent=
+      lastReal.dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    document.getElementById('tempVal').textContent=lastReal.temp.toFixed(1)+' °C';
+    document.getElementById('humVal').textContent=lastReal.hum.toFixed(1)+' %';
+
+    const humAlert=document.getElementById('humAlert');
+    const lastN=rawRows.slice(-10);
+    const humRising=lastN.length===10&&lastN.every((r,i)=>i===0||r.hum>=lastN[i-1].hum);
+    const humHigh=lastReal.hum>=40;
+    if(humRising||humHigh){
+      humAlert.classList.add('show');
+      humAlert.textContent=humHigh?`⚠️ ${lastReal.hum.toFixed(1)}% — выше 40%!`:'⚠️ Влажность растёт 10 измерений подряд!';
+    }else humAlert.classList.remove('show');
+
+    let lv=null,lvRow=null;
+    for(let i=rawRows.length-1;i>=0;i--){if(okDist(rawRows[i].dist)){lv=rawRows[i].dist;lvRow=rawRows[i];break;}}
+    drawThermo(lv);
+    if(lv!==null){
+      document.getElementById('lvNum').textContent=lv.toFixed(3);
+      const st=levelStatus(lv);
+      const badge=document.getElementById('lvBadge');
+      badge.textContent=st.label;badge.className='badge '+st.cls;
+      const ago7=new Date(now-7*86400000);
+      const same=rawRows.filter(r=>r.dt>ago7&&r.dt.getHours()===now.getHours()&&okDist(r.dist));
+      document.getElementById('avgHour').textContent=same.length
+        ?(same.reduce((s,r)=>s+r.dist,0)/same.length).toFixed(3)+' м':'нет данных';
+      const fc=buildForecast(rawRows,lv,lvRow.dt);
+      document.getElementById('fc50').textContent=lv>=-0.50?'✅ уже':fc.high;
+      document.getElementById('fc65').textContent=lv<=-0.65?'✅ уже':fc.low;
+    }else{
+      document.getElementById('lvNum').textContent='—';
+      document.getElementById('lvBadge').textContent='⚠️ нет данных';
     }
 
-    const head = rows[0];
-    const body = rows.slice(1);
+    const bat=lastReal.bat;
+    const pctB=Math.max(0,Math.min(1,(bat-3.1)/1.0));
+    const batC=pctB>0.6?'#22c55e':pctB>0.3?'#f59e0b':'#ef4444';
+    drawBat(pctB,batC);
+    document.getElementById('batNum').textContent=bat.toFixed(2)+' В';
+    document.getElementById('batSub').textContent=Math.round(pctB*100)+'% заряда';
 
-    const thead = document.createElement("thead");
-    const trh = document.createElement("tr");
-    for (const h of head) {
-      const th = document.createElement("th");
-      th.textContent = h;
-      trh.appendChild(th);
+    const ms24=now-24*3600000,ms7=now-7*86400000,ms30=now-30*86400000;
+
+    // 24 часа — все точки (с gap-fill)
+    const r24=rows.filter(r=>r.dt>ms24&&okDist(r.dist));
+    document.getElementById('gap24').classList.toggle('show',r24.some(r=>r.synthetic));
+    mkBarLevel(
+      'c24',
+      r24.map(r=>fmtTime(r.dt)),
+      r24.map(r=>r.dist),
+      r24.map(r=>r.synthetic)
+    );
+
+    // Среднее за час суток — 7 дней
+    const hourLabels=Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00');
+    const hourVals=Array.from({length:24},(_,h)=>{
+      const pts=rawRows.filter(r=>r.dt>ms7&&r.dt.getHours()===h&&okDist(r.dist));
+      return pts.length?+(pts.reduce((s,r)=>s+r.dist,0)/pts.length).toFixed(4):null;
+    });
+    mkBarLevel('cByHour',hourLabels,hourVals,null);
+
+    function dayAvg(ms){
+      const map={};
+      rawRows.filter(r=>r.dt>ms&&okDist(r.dist)).forEach(r=>{
+        const k=fmtDay(r.dt);(map[k]=map[k]||[]).push(r.dist);
+      });
+      const labels=Object.keys(map);
+      const vals=labels.map(k=>+(map[k].reduce((s,x)=>s+x,0)/map[k].length).toFixed(4));
+      return{labels,vals};
     }
-    thead.appendChild(trh);
 
-    const tbody = document.createElement("tbody");
-    for (const r of body) {
-      const tr = document.createElement("tr");
-      for (let i = 0; i < head.length; i++) {
-        const td = document.createElement("td");
-        const val = r[i] ?? "";
-        const norm = normalizeValue(val);
-        td.textContent = (typeof norm === "number" && Number.isFinite(norm)) ? String(norm) : String(val);
-        if (head[i]?.toLowerCase?.() === "date" || head[i]?.toLowerCase?.() === "time") td.classList.add("nowrap");
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
-    }
+    // Среднее за день — 7 дней
+    const d7=dayAvg(ms7);
+    document.getElementById('gap7avg').classList.toggle('show',hadGap&&d7.labels.length<7);
+    mkBarLevel('c7avg',d7.labels,d7.vals,null);
 
-    els.tbl.appendChild(thead);
-    els.tbl.appendChild(tbody);
-  }
+    // Среднее за день — 30 дней
+    const d30=dayAvg(ms30);
+    mkBarLevel('c30avg',d30.labels,d30.vals,null);
 
-  async function fetchText(url) {
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(`Fetch failed: ${r.status} ${r.statusText}`);
-    return await r.text();
-  }
+    // Температура / влажность
+    const rTH=rows.filter(r=>r.dt>ms24);
+    mkLine('cTemp',rTH.map(r=>({label:fmtTime(r.dt),value:r.temp})),'#f97316','rgba(249,115,22,.15)');
+    mkLine('cHum', rTH.map(r=>({label:fmtTime(r.dt),value:r.hum})), '#06b6d4','rgba(6,182,212,.15)');
 
-  function loadCache() {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      if (!obj || !obj.t || !obj.csv) return null;
-      if (Date.now() - obj.t > CACHE_TTL_MS) return null;
-      return obj;
-    } catch {
-      return null;
-    }
-  }
+  }catch(e){showError(e.message);console.error(e);}
+}
 
-  function saveCache(csvText, sourceUrl) {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), csv: csvText, source: sourceUrl }));
-    } catch {}
-  }
-
-  function setFreshnessLabel(loadedAtMs) {
-    const d = new Date(loadedAtMs);
-    els.freshness.textContent = `Данные актуальны на: ${d.toLocaleString("ru-RU", { hour12: false })}`;
-  }
-
-  async function loadData({ force = false } = {}) {
-    clearError();
-    els.reloadBtn.disabled = true;
-
-    try {
-      setStatus("Загрузка…", true);
-
-      if (!force) {
-        const c = loadCache();
-        if (c) {
-          els.sourceLabel.textContent = c.source || "cache";
-          renderTable(parseCsv(c.csv));
-          setFreshnessLabel(c.t);
-          setStatus("ОК (из кеша)", true);
-          return;
-        }
-      }
-
-      // основной источник
-      els.sourceLabel.textContent = SHEET_CSV_URL;
-      const csvText = await fetchText(SHEET_CSV_URL);
-      renderTable(parseCsv(csvText));
-      saveCache(csvText, SHEET_CSV_URL);
-      setFreshnessLabel(Date.now());
-      setStatus("ОК", true);
-      return;
-
-    } catch (e1) {
-      // fallback
-      if (FALLBACK_CSV_URL) {
-        try {
-          els.sourceLabel.textContent = FALLBACK_CSV_URL;
-          const csvText2 = await fetchText(FALLBACK_CSV_URL);
-          renderTable(parseCsv(csvText2));
-          saveCache(csvText2, FALLBACK_CSV_URL);
-          setFreshnessLabel(Date.now());
-          setStatus("ОК (fallback)", true);
-          return;
-        } catch (e2) {
-          showError(`Основной источник упал:\n${e1}\n\nFallback тоже упал:\n${e2}`);
-          setStatus("Ошибка", false);
-        }
-      } else {
-        showError(e1);
-        setStatus("Ошибка", false);
-      }
-    } finally {
-      els.reloadBtn.disabled = false;
-    }
-  }
-
-  els.reloadBtn.addEventListener("click", () => loadData({ force: true }));
-  loadData({ force: false });
-})();
+loadData();
+setInterval(loadData,5*60*1000);
 </script>
 </body>
 </html>
